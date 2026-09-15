@@ -8,3 +8,6 @@ node_modules/
 # Windows / OneDrive
 Thumbs.db
 desktop.ini
+
+.vercel
+.env*
