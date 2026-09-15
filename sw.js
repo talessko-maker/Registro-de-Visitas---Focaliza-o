@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v1";
+const VERSAO = "v2";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 
@@ -72,25 +72,38 @@ self.addEventListener("fetch", e => {
   if (url.origin !== self.location.origin) return;
 
   /* A página em si: tenta a rede primeiro, para que um deploy novo
-     apareça assim que houver sinal. Sem sinal, cai no cache. */
+     apareça assim que houver sinal. Sem sinal, cai no cache.
+
+     Só o formulário é guardado. O painel do admin precisa de rede para
+     ler o banco, e guardá-lo aqui sobrescreveria o formulário — o
+     aparelho abriria o painel no lugar dele quando ficasse sem sinal. */
   if (req.mode === "navigate") {
+    const ehFormulario = url.pathname === "/" || url.pathname === "/index.html";
     e.respondWith(
       fetch(req)
         .then(resp => {
-          const copia = resp.clone();
-          caches.open(CACHE_APP).then(c => c.put("/index.html", copia));
+          if (ehFormulario) {
+            const copia = resp.clone();
+            caches.open(CACHE_APP).then(c => c.put("/index.html", copia));
+          }
           return resp;
         })
-        .catch(async () =>
-          (await caches.match("/index.html")) ||
-          (await caches.match("/")) ||
-          new Response(
+        .catch(async () => {
+          if (ehFormulario) {
+            const guardado = (await caches.match("/index.html")) ||
+                             (await caches.match("/"));
+            if (guardado) return guardado;
+          }
+          return new Response(
             "<meta charset='utf-8'><p style=\"font:16px system-ui;padding:24px\">" +
-            "Sem conexão e a página ainda não foi guardada neste aparelho. " +
-            "Abra o site uma vez com internet.</p>",
+            (ehFormulario
+              ? "Sem conexão e a página ainda não foi guardada neste aparelho. " +
+                "Abra o site uma vez com internet."
+              : "O painel precisa de internet para ler os registros.") +
+            "</p>",
             { headers: { "Content-Type": "text/html; charset=utf-8" } }
-          )
-        )
+          );
+        })
     );
     return;
   }

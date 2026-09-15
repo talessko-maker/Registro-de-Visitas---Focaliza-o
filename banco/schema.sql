@@ -83,9 +83,21 @@ create policy "formulario insere" on public.visitas
   for insert to public
   with check (origem in ('focalizacao', 'terra-forte'));
 
--- Quando existir um painel próprio, com login de verdade, é esta linha
--- que abre a leitura para quem estiver autenticado:
--- create policy "admin le" on public.visitas for select to authenticated using (true);
+-- Leitura para o painel (painel.html): só para quem entrou com conta.
+--
+-- ANTES DE RODAR ISTO, desligue o cadastro público em
+-- Authentication > Sign In / Providers > Email > "Allow new users to
+-- sign up". Com ele ligado, qualquer pessoa cria conta sozinha e passa
+-- a ler todos os registros.
+--
+-- O "auth.uid() is not null" é cinto e suspensório: mesmo que o papel
+-- se comporte de forma inesperada, sem sessão de verdade não lê nada.
+drop policy if exists "admin le" on public.visitas;
+create policy "admin le" on public.visitas
+  for select to authenticated
+  using (auth.uid() is not null);
+
+grant select on public.visitas to authenticated;
 
 
 -- ===================================================================
@@ -202,6 +214,14 @@ select
 from public.visitas v
 group by 1, 2, 3
 order by 1 desc, 4 desc;
+
+
+-- As visões só podem ser lidas por quem entrou com conta — elas herdam
+-- a regra da tabela por causa do security_invoker. Este grant vem aqui
+-- no fim porque as visões precisam existir antes.
+grant select on public.visitas_planilha, public.situacao_atual,
+                public.acoes_pendentes, public.visitas_por_mes
+  to authenticated;
 
 
 -- ===================================================================
