@@ -57,6 +57,16 @@ header p{margin:4px 0 0;font-size:13px;font-weight:400;color:#C3D8F2}
 .lg-foc{width:90px;height:14px;background-image:var(--logo-foc-tela)}
 .risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
 .topo{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#quem-entrou{font-size:13px;color:#C3D8F2}
+button.sair{
+  background:rgba(255,255,255,.14);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.4);
+  padding:7px 14px;
+  font-size:14px;
+}
+button.sair:hover{background:rgba(255,255,255,.24)}
 
 /* ---------- estrutura ---------- */
 main{max-width:940px;margin:0 auto;padding:20px 16px 40px}
@@ -192,6 +202,10 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
       <h1>Painel de visitas</h1>
       <p id="assinatura">Consulta dos registros enviados pelos consultores</p>
     </div>
+    <div class="sessao" id="sessao" hidden>
+      <span id="quem-entrou"></span>
+      <button type="button" class="sair" id="btn-sair">Sair</button>
+    </div>
   </div>
 </header>
 
@@ -256,7 +270,6 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
       <div class="acoes">
         <button type="button" class="leve" id="btn-limpar">Limpar filtros</button>
         <button type="button" class="leve" id="btn-csv">Exportar CSV</button>
-        <button type="button" class="leve" id="btn-sair">Sair</button>
       </div>
     </div>
 
@@ -388,8 +401,11 @@ async function pede(caminho) {
    =================================================================== */
 function mostraLogin(aviso) {
   esquece();
+  visitas = [];
+  $("lista").innerHTML = "";
   $("painel").hidden = true;
   $("carregando").hidden = true;
+  $("sessao").hidden = true;
   $("entrada").hidden = false;
   $("assinatura").textContent = "Consulta dos registros enviados pelos consultores";
   if (aviso) {
@@ -402,7 +418,8 @@ async function mostraPainel() {
   $("entrada").hidden = true;
   $("painel").hidden = true;
   $("carregando").hidden = false;
-  $("assinatura").textContent = sessao.email;
+  $("quem-entrou").textContent = sessao.email;
+  $("sessao").hidden = false;
 
   try {
     const dados = await pede(
@@ -721,7 +738,17 @@ $("btn-limpar").addEventListener("click", () => {
 });
 
 $("btn-csv").addEventListener("click", csv);
-$("btn-sair").addEventListener("click", () => mostraLogin());
+/* Sair avisa o Supabase, para o refresh token nao continuar valendo
+   caso alguem tenha copiado o que estava guardado no aparelho. */
+$("btn-sair").addEventListener("click", () => {
+  if (sessao && sessao.access_token) {
+    fetch(`${SUPABASE.url}/auth/v1/logout`, {
+      method: "POST",
+      headers: { apikey: SUPABASE.chave, Authorization: "Bearer " + sessao.access_token }
+    }).catch(() => {});
+  }
+  mostraLogin();
+});
 
 /* --- começo --- */
 sessao = recupera();
