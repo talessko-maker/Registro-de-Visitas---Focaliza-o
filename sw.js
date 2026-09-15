@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v2";
+const VERSAO = "v3";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 
@@ -14,6 +14,8 @@ const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 const ESSENCIAIS = [
   "/",
   "/index.html",
+  "/vendor-jspdf.js",
+  "/relatorio.js",
   "/manifest.json",
   "/favicon.ico",
   "/icon-192.png",
@@ -43,6 +45,20 @@ self.addEventListener("activate", e => {
   );
 });
 
+/* Serve o que está guardado na hora e busca a versão nova por trás.
+   type "opaque" são as respostas sem CORS: dá para guardar, só não dá
+   para inspecionar. */
+function cacheEDepoisRede(nomeCache, req) {
+  return caches.open(nomeCache).then(async cache => {
+    const guardado = await cache.match(req);
+    const rede = fetch(req).then(resp => {
+      if (resp.ok || resp.type === "opaque") cache.put(req, resp.clone());
+      return resp;
+    }).catch(() => null);
+    return guardado || rede || Response.error();
+  });
+}
+
 self.addEventListener("fetch", e => {
   const req = e.request;
   /* Os envios ao Supabase são POST: passam direto, e quem cuida deles
@@ -54,18 +70,7 @@ self.addEventListener("fetch", e => {
   /* Fontes do Google: serve do cache na hora e atualiza por trás.
      Sem isso o Poppins some quando não há sinal. */
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
-    e.respondWith(
-      caches.open(CACHE_FONTES).then(async cache => {
-        const guardado = await cache.match(req);
-        const rede = fetch(req).then(resp => {
-          /* type "opaque" são as respostas sem CORS: dá para guardar,
-             só não dá para inspecionar. */
-          if (resp.ok || resp.type === "opaque") cache.put(req, resp.clone());
-          return resp;
-        }).catch(() => null);
-        return guardado || rede || Response.error();
-      })
-    );
+    e.respondWith(cacheEDepoisRede(CACHE_FONTES, req));
     return;
   }
 
@@ -105,6 +110,14 @@ self.addEventListener("fetch", e => {
           );
         })
     );
+    return;
+  }
+
+  /* Os arquivos do relatório (jsPDF e o desenho do PDF): servem do
+     cache na hora e atualizam por trás. Sem isso, uma mudança no layout
+     do relatório só chegaria ao aparelho quando VERSAO mudasse. */
+  if (url.pathname.endsWith(".js")) {
+    e.respondWith(cacheEDepoisRede(CACHE_APP, req));
     return;
   }
 

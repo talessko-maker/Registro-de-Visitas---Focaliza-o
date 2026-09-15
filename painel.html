@@ -169,6 +169,9 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 .dados dt{color:var(--tinta-fraca)}
 .dados dd{margin:0}
 
+.pe{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;
+  padding-top:14px;border-top:1px solid var(--linha)}
+.aviso-pdf{font-size:13px;color:var(--alerta)}
 .vazio{background:#fff;border:1px dashed var(--linha);border-radius:14px;
   padding:28px 16px;text-align:center;color:var(--tinta-fraca);font-size:14px}
 .rodape{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
@@ -273,6 +276,11 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 
 </main>
 
+<!-- jsPDF e o desenho do relatorio: os mesmos arquivos que o
+     formulario carrega, para o PDF sair identico. -->
+<script src="/vendor-jspdf.js"></script>
+<script src="/relatorio.js"></script>
+
 <script>
 /* ===================================================================
    1. CONFIGURAÇÃO
@@ -285,17 +293,10 @@ const SUPABASE = {
   tabela: "visitas"
 };
 
-/* Rótulos do checklist — os mesmos ids que o formulário grava. */
-const ITENS = {
-  consultoria_contratada:   "Consultoria contratada",
-  visita_yuri:              "Visita do Yuri",
-  visita_guilherme:         "Visita do Guilherme",
-  ja_tem_ap:                "Já tem agricultura de precisão",
-  ja_tinha_analise_solo:    "Já tinha análise de solo",
-  regulagem_pulverizador:   "Regulagem de pulverizador",
-  coleta_analise_solo:      "Coleta de análise de solo",
-  coleta_analise_nematoide: "Coleta de análise de nematoide"
-};
+/* O checklist (ITENS) vem de /relatorio.js, o mesmo arquivo que o
+   formulário carrega — item novo se cadastra num lugar só. Aqui só
+   viro a lista em um mapa de id para rótulo. */
+const ROTULOS = Object.fromEntries(ITENS.map(([id, rotulo]) => [id, rotulo]));
 
 const ORIGENS = { focalizacao: "Focalização", "terra-forte": "Terra Forte" };
 
@@ -521,7 +522,7 @@ function cartao(v) {
   const situacao = extras.situacao || {};
   const marcados = Object.entries(situacao)
     .filter(([, sim]) => sim)
-    .map(([id]) => `<span>${escapa(ITENS[id] || id)}</span>`).join("");
+    .map(([id]) => `<span>${escapa(ROTULOS[id] || id)}</span>`).join("");
 
   const fotos = (v.fotos || []).map(u =>
     `<a href="${escapa(u)}" target="_blank" rel="noopener">
@@ -563,12 +564,91 @@ function cartao(v) {
       <dt>Enviado em</dt>
       <dd>${new Date(v.registrado_em).toLocaleString("pt-BR")}</dd>
     </dl>
+
+    <div class="pe">
+      <button type="button" class="leve pdf" data-id="${escapa(v.id)}">Baixar PDF</button>
+      <span class="aviso-pdf"></span>
+    </div>
   </div>
 </details>`;
 }
 
 /* ===================================================================
-   6. EXPORTAR
+   6. O MESMO PDF QUE SAI NO CELULAR
+
+   O desenho do relatório está em /relatorio.js, carregado aqui e no
+   formulário — é literalmente a mesma função, então o PDF sai idêntico.
+
+   O que muda é a forma das fotos: no celular elas estão embutidas como
+   dados; aqui vêm como endereço no Storage, e o jsPDF precisa dos dados
+   para desenhar. Então cada foto é buscada e convertida antes.
+   =================================================================== */
+function fotoParaDados(url) {
+  return fetch(url)
+    .then(r => { if (!r.ok) throw new Error("foto " + r.status); return r.blob(); })
+    .then(blob => new Promise((ok, falha) => {
+      const leitor = new FileReader();
+      leitor.onload = () => ok(leitor.result);
+      leitor.onerror = falha;
+      leitor.readAsDataURL(blob);
+    }));
+}
+
+/* A linha do banco no formato que gerarPdf() espera. */
+async function paraRelatorio(v) {
+  const extras = v.extras || {};
+  const fotos = [];
+  let perdidas = 0;
+  for (const url of v.fotos || []) {
+    try { fotos.push({ dados: await fotoParaDados(url) }); }
+    catch (e) { perdidas++; console.warn("foto nao veio:", url, e.message); }
+  }
+  return [{
+    consultor: v.consultor,
+    produtor: v.produtor,
+    municipio: v.municipio || "",
+    data_visita: v.data_visita,
+    descricao: v.descricao || "",
+    descricao_html: v.descricao_html || "",
+    acao: v.acao || "",
+    prazo_acao: v.prazo_acao || "",
+    area_manejo_ha: extras.area_manejo_ha == null ? null : extras.area_manejo_ha,
+    area_experimental_ha: extras.area_experimental_ha == null ? null : extras.area_experimental_ha,
+    situacao: extras.situacao || {},
+    fotos
+  }, perdidas];
+}
+
+$("lista").addEventListener("click", async e => {
+  const botao = e.target.closest("button.pdf");
+  if (!botao) return;
+
+  const visita = visitas.find(v => v.id === botao.dataset.id);
+  const aviso = botao.parentElement.querySelector(".aviso-pdf");
+  if (!visita) return;
+
+  botao.disabled = true;
+  botao.textContent = "Gerando…";
+  aviso.textContent = "";
+  try {
+    const [registro, perdidas] = await paraRelatorio(visita);
+    if (!baixaPdf(registro)) throw new Error("o PDF não pôde ser montado neste navegador");
+    if (perdidas) {
+      aviso.textContent = perdidas === 1
+        ? "1 foto não pôde ser carregada e ficou de fora"
+        : perdidas + " fotos não puderam ser carregadas e ficaram de fora";
+    }
+  } catch (err) {
+    console.error(err);
+    aviso.textContent = "Não deu para gerar: " + err.message;
+  } finally {
+    botao.disabled = false;
+    botao.textContent = "Baixar PDF";
+  }
+});
+
+/* ===================================================================
+   7. EXPORTAR
    Ponto-e-vírgula e BOM porque é o que o Excel em português entende
    sem perguntar nada.
    =================================================================== */
@@ -582,7 +662,7 @@ function csv() {
     ["formulario",   v => ORIGENS[v.origem] || v.origem],
     ["area_manejo_ha",       v => (v.extras || {}).area_manejo_ha],
     ["area_experimental_ha", v => (v.extras || {}).area_experimental_ha],
-    ...Object.entries(ITENS).map(([id, rotulo]) =>
+    ...ITENS.map(([id, rotulo]) =>
       [rotulo, v => ((v.extras || {}).situacao || {})[id] ? "sim" : "nao"]),
     ["acao",        v => v.acao],
     ["prazo_acao",  v => br(v.prazo_acao)],
@@ -611,7 +691,7 @@ function csv() {
 }
 
 /* ===================================================================
-   7. LIGAÇÕES
+   8. LIGAÇÕES
    =================================================================== */
 $("form-login").addEventListener("submit", async e => {
   e.preventDefault();
