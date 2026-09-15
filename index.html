@@ -858,8 +858,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
    Enquanto os dois estiverem vazios, o formulário baixa um .json.
    =================================================================== */
 const SUPABASE = {
-  url:    "",                  // https://xxxxxxxx.supabase.co
-  chave:  "",                  // chave anon (public)
+  url:    "https://iozeyyuftogrpsndkrvj.supabase.co",
+  chave:  "",                  // chave anon / publishable — pode ficar no HTML
   tabela: "visitas",
   bucket: "fotos-visitas",
   origem: "focalizacao"        // diferencia dos registros do outro formulário
@@ -1677,12 +1677,15 @@ async function enviaRegistro(reg) {
     registrado_em: reg.enviado_em
   };
 
+  /* ignore-duplicates, e não merge: reenvio da fila que já entrou é
+     descartado sem erro. Upsert exigiria dar update ao anon, e a chave
+     anon está no HTML — o banco só aceita insert dela. */
   const r = await fetch(`${SUPABASE.url}/rest/v1/${SUPABASE.tabela}`, {
     method: "POST",
     headers: {
       ...cab,
       "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates,return=minimal"
+      Prefer: "resolution=ignore-duplicates,return=minimal"
     },
     body: JSON.stringify(linha)
   });
