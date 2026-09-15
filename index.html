@@ -859,7 +859,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
    =================================================================== */
 const SUPABASE = {
   url:    "https://iozeyyuftogrpsndkrvj.supabase.co",
-  chave:  "",                  // chave anon / publishable — pode ficar no HTML
+  chave:  "sb_publishable_41oi3yeqR7h4BxPAdEcQow_aQ6by_sJ",
   tabela: "visitas",
   bucket: "fotos-visitas",
   origem: "focalizacao"        // diferencia dos registros do outro formulário
@@ -1649,10 +1649,19 @@ async function enviaRegistro(reg) {
     const r = await fetch(
       `${SUPABASE.url}/storage/v1/object/${SUPABASE.bucket}/${caminho}`, {
         method: "POST",
-        headers: { ...cab, "Content-Type": "image/jpeg", "x-upsert": "true" },
+        headers: { ...cab, "Content-Type": "image/jpeg" },
         body: dataUrlParaBlob(foto.dados)
       });
-    if (!r.ok) throw new Error("foto " + (i + 1) + ": " + r.status);
+    /* Sem "x-upsert": regravar exigiria dar update ao anon, e a chave
+       anon está no HTML. Quando a foto já subiu numa tentativa anterior
+       da fila, o Storage responde KeyAlreadyExists — o caminho carrega
+       o id do registro, então é o mesmo arquivo, e seguir é o certo. */
+    if (!r.ok) {
+      const aviso = await r.text();
+      if (!aviso.includes("KeyAlreadyExists")) {
+        throw new Error("foto " + (i + 1) + ": " + r.status + " " + aviso);
+      }
+    }
     enderecos.push(
       `${SUPABASE.url}/storage/v1/object/public/${SUPABASE.bucket}/${caminho}`);
   }
@@ -1677,19 +1686,25 @@ async function enviaRegistro(reg) {
     registrado_em: reg.enviado_em
   };
 
-  /* ignore-duplicates, e não merge: reenvio da fila que já entrou é
-     descartado sem erro. Upsert exigiria dar update ao anon, e a chave
-     anon está no HTML — o banco só aceita insert dela. */
+  /* Insert puro, sem upsert nenhum. As duas formas de upsert — o
+     resolution=ignore-duplicates aqui e o x-upsert nas fotos — precisam
+     de leitura e de update, que o anon não tem e não deve ter, já que a
+     chave fica visível no HTML. O 409 tratado abaixo cobre exatamente o
+     caso que o upsert cobriria: a fila reenviando um registro que já
+     entrou e cuja resposta se perdeu. */
   const r = await fetch(`${SUPABASE.url}/rest/v1/${SUPABASE.tabela}`, {
     method: "POST",
     headers: {
       ...cab,
       "Content-Type": "application/json",
-      Prefer: "resolution=ignore-duplicates,return=minimal"
+      Prefer: "return=minimal"
     },
     body: JSON.stringify(linha)
   });
-  if (!r.ok) throw new Error("registro: " + r.status + " " + await r.text());
+  /* 409 = já existe linha com este id: a tentativa anterior chegou. */
+  if (!r.ok && r.status !== 409) {
+    throw new Error("registro: " + r.status + " " + await r.text());
+  }
 }
 
 /* --- tenta esvaziar a fila --- */
