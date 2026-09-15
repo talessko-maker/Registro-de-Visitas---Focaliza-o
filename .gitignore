@@ -1,0 +1,10 @@
+# Vercel (link local do projeto e credenciais)
+.vercel
+.env*
+
+node_modules/
+*.log
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
