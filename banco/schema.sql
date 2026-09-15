@@ -1,8 +1,17 @@
 -- ===================================================================
 -- REGISTRO DE VISITAS — estrutura do banco
 --
--- Cole este arquivo inteiro no SQL Editor do Supabase e rode uma vez.
--- Pode rodar de novo sem medo: tudo é "if not exists" ou "or replace".
+-- Arquivo único e final. Substitui tudo o que rodou antes: cria o que
+-- falta, corrige as regras que ficaram frouxas nos testes, apaga o
+-- diagnóstico temporário e limpa as linhas de teste.
+--
+-- Cole inteiro no SQL Editor e rode. Pode rodar quantas vezes quiser —
+-- tudo é "if not exists", "or replace" ou "drop if exists" antes de
+-- criar.
+--
+-- ANTES DE CLICAR EM RUN: não deixe nenhum trecho selecionado no
+-- editor. Com texto selecionado, o Supabase roda só a seleção, e é
+-- assim que um script "dá Success" sem ter entrado inteiro.
 --
 -- Projeto: https://iozeyyuftogrpsndkrvj.supabase.co
 -- Os dois formulários (Focalização e Terra Forte) gravam nesta mesma
@@ -10,11 +19,11 @@
 -- ===================================================================
 
 
--- -------------------------------------------------------------------
+-- ===================================================================
 -- 1. A TABELA
--- Uma linha por visita. O que o formulário manda está em enviaRegistro()
--- no index.html; os nomes aqui são os mesmos, na mesma ordem.
--- -------------------------------------------------------------------
+-- Uma linha por visita. O que o formulário manda está em
+-- enviaRegistro(), no index.html; os nomes aqui são os mesmos.
+-- ===================================================================
 create table if not exists public.visitas (
   id              uuid primary key,          -- gerado no celular, evita duplicata
   origem          text        not null,      -- 'focalizacao' | 'terra-forte'
@@ -42,21 +51,36 @@ create index if not exists visitas_descricao_idx
   on public.visitas using gin (to_tsvector('portuguese', coalesce(descricao, '')));
 
 
--- -------------------------------------------------------------------
+-- ===================================================================
 -- 2. QUEM PODE O QUÊ
 --
--- A chave "anon" fica visível no HTML do site — é assim por projeto,
--- ela não é segredo. Quem protege os dados é a regra abaixo: o
--- formulário só INSERE. Sem regra de SELECT, ninguém lê a tabela com
--- essa chave, nem sabendo o endereço.
+-- A chave do site fica visível no HTML — é assim por projeto, ela não
+-- é segredo. Quem protege os dados é a regra abaixo: o formulário só
+-- INSERE. Sem regra de SELECT, ninguém lê a tabela com essa chave,
+-- nem sabendo o endereço. O admin lê logado no painel do Supabase,
+-- que não passa por aqui.
 --
--- O admin lê logado no painel do Supabase, que não passa por aqui.
--- -------------------------------------------------------------------
+-- Duas coisas que aprendemos apanhando, e que precisam ficar assim:
+--
+-- "to public" e não "to anon" — public aqui é "qualquer papel" do
+-- Postgres, não "aberto para a internet". Quem chega ao banco continua
+-- sendo só quem tem a chave.
+--
+-- NADA DE UPSERT. O formulário insere direto e trata "já existe" como
+-- sucesso (409 na tabela, KeyAlreadyExists no Storage), que é o caso
+-- da fila reenviando um registro cuja resposta se perdeu. Upsert — o
+-- resolution=ignore-duplicates e o x-upsert — precisa de leitura e de
+-- update, que este papel não tem e não deve ter. Era isso, e não a
+-- regra, que fazia todo insert cair em "new row violates row-level
+-- security policy".
+-- ===================================================================
 alter table public.visitas enable row level security;
+
+grant insert on public.visitas to anon;
 
 drop policy if exists "formulario insere" on public.visitas;
 create policy "formulario insere" on public.visitas
-  for insert to anon
+  for insert to public
   with check (origem in ('focalizacao', 'terra-forte'));
 
 -- Quando existir um painel próprio, com login de verdade, é esta linha
@@ -64,28 +88,23 @@ create policy "formulario insere" on public.visitas
 -- create policy "admin le" on public.visitas for select to authenticated using (true);
 
 
--- -------------------------------------------------------------------
+-- ===================================================================
 -- 3. AS FOTOS
 -- Bucket público porque o PDF e o painel montam a URL direta. O caminho
 -- carrega o uuid do registro, então não é endereço adivinhável.
--- (Dá para criar pelo menu Storage > New bucket, dá no mesmo.)
--- -------------------------------------------------------------------
+-- ===================================================================
 insert into storage.buckets (id, name, public)
 values ('fotos-visitas', 'fotos-visitas', true)
 on conflict (id) do update set public = true;
 
 drop policy if exists "formulario envia foto" on storage.objects;
 create policy "formulario envia foto" on storage.objects
-  for insert to anon
+  for insert to public
   with check (bucket_id = 'fotos-visitas');
 
--- O upload vai com "x-upsert", para o reenvio da fila não travar num
--- arquivo que já subiu. Upsert precisa de update, daí esta segunda regra.
+-- Sem regra de update: o upload não usa mais x-upsert. Esta linha
+-- remove a regra que existia no desenho antigo.
 drop policy if exists "formulario regrava foto" on storage.objects;
-create policy "formulario regrava foto" on storage.objects
-  for update to anon
-  using (bucket_id = 'fotos-visitas')
-  with check (bucket_id = 'fotos-visitas');
 
 
 -- ===================================================================
@@ -183,3 +202,53 @@ select
 from public.visitas v
 group by 1, 2, 3
 order by 1 desc, 4 desc;
+
+
+-- ===================================================================
+-- 5. LIMPEZA DO QUE FOI TESTE
+-- ===================================================================
+
+-- a função que usei para descobrir qual papel o site assume
+drop function if exists public.quem_sou_eu();
+
+-- as linhas gravadas durante os testes contra o banco
+delete from public.visitas
+where consultor in ('TESTE', 'TESTE - APAGAR', 'x')
+   or produtor  in ('TESTE - APAGAR', 'x')
+   or origem = 'invasor';
+
+-- As fotos de teste ficam no Storage e não saem por SQL: apague pelo
+-- menu Storage > fotos-visitas (a pasta "teste" e a pasta com a data de
+-- hoje). Como ainda não há registro real, dá para esvaziar o bucket.
+
+
+-- ===================================================================
+-- 6. COMO FICOU (é este resultado que aparece na tela)
+-- ===================================================================
+select json_build_object(
+  'linhas_na_tabela', (select count(*) from public.visitas),
+
+  'rls_ligada', (select relrowsecurity
+                 from pg_class where oid = 'public.visitas'::regclass),
+
+  'politicas', (
+    select json_agg(json_build_object(
+      'onde',     p.polrelid::regclass::text,
+      'nome',     p.polname,
+      'comando',  case p.polcmd when 'a' then 'insert' when 'w' then 'update'
+                                when 'r' then 'select' when 'd' then 'delete'
+                                else p.polcmd::text end,
+      'papeis',   coalesce((select array_agg(r.rolname::text)
+                            from pg_roles r where r.oid = any(p.polroles)),
+                           array['public']),
+      'condicao', pg_get_expr(p.polwithcheck, p.polrelid)))
+    from pg_policy p
+    where p.polrelid in ('public.visitas'::regclass, 'storage.objects'::regclass)
+      and p.polname like 'formulario%'),
+
+  'visoes', (
+    select json_agg(viewname order by viewname)
+    from pg_views where schemaname = 'public'),
+
+  'bucket_publico', (select public from storage.buckets where id = 'fotos-visitas')
+) as conferencia;
