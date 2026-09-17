@@ -58,6 +58,25 @@ header h1{
   font-weight:600;
   letter-spacing:-.01em;
 }
+/* Mesma estrutura do cabeçalho do painel: a marca à esquerda, a ação à
+   direita, e as duas descem uma sobre a outra quando a tela é estreita
+   demais para caberem lado a lado. */
+.topo{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;
+}
+.entrar{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:var(--raio);
+  color:#fff;text-decoration:none;
+  font-size:14px;font-weight:500;
+  white-space:nowrap;
+}
+.entrar:hover{background:rgba(255,255,255,.24)}
+.entrar svg{flex:none}
 header p{
   margin:4px 0 0;
   font-size:13px;
@@ -364,12 +383,26 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
 <body>
 
 <header>
-  <div class="marcas">
-    <span class="lg lg-tf" role="img" aria-label="Terra Forte"></span>
-    <span class="risco"></span>
-    <span class="lg lg-foc" role="img" aria-label="Focalização"></span>
+  <div class="topo">
+    <div>
+      <div class="marcas">
+        <span class="lg lg-tf" role="img" aria-label="Terra Forte"></span>
+        <span class="risco"></span>
+        <span class="lg lg-foc" role="img" aria-label="Focalização"></span>
+      </div>
+      <h1>Registro de visita</h1>
+    </div>
+    <a class="entrar" href="/painel.html">
+      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+        <path d="M11 2.5h3A1.5 1.5 0 0115.5 4v10a1.5 1.5 0 01-1.5 1.5h-3"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M7.5 12.5L11 9 7.5 5.5M11 9H2.5"
+              stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Painel
+    </a>
   </div>
-  <h1>Registro de visita</h1>
 </header>
 
 <main>
