@@ -83,21 +83,138 @@ create policy "formulario insere" on public.visitas
   for insert to public
   with check (origem in ('focalizacao', 'terra-forte'));
 
--- Leitura para o painel (painel.html): só para quem entrou com conta.
+-- Leitura: quem entrou com conta lê o que é dela, e só isso.
 --
 -- ANTES DE RODAR ISTO, desligue o cadastro público em
 -- Authentication > Sign In / Providers > Email > "Allow new users to
--- sign up". Com ele ligado, qualquer pessoa cria conta sozinha e passa
--- a ler todos os registros.
+-- sign up". Com ele ligado, qualquer pessoa cria conta sozinha. Hoje
+-- ela não veria nada (item 2.1 abaixo: sem vínculo, sem linhas), mas
+-- conta que ninguém pediu é porta que ninguém fecha.
 --
--- O "auth.uid() is not null" é cinto e suspensório: mesmo que o papel
--- se comporte de forma inesperada, sem sessão de verdade não lê nada.
+-- A regra em si está no item 2.1, porque depende da tabela de vínculo.
 drop policy if exists "admin le" on public.visitas;
-create policy "admin le" on public.visitas
-  for select to authenticated
-  using (auth.uid() is not null);
 
 grant select on public.visitas to authenticated;
+
+
+-- ===================================================================
+-- 2.1 CADA CONSULTOR VÊ O QUE É SEU
+--
+-- A senha do painel diz QUEM é a pessoa. Ela não diz o que a pessoa
+-- pode ver — isso é esta regra, e ela mora aqui no banco de propósito.
+-- Separar na tela não separa nada: o navegador é do usuário, e quem
+-- tem um token válido chama a API do Supabase direto e recebe o que a
+-- regra permitir. Se a regra permite tudo, a tela é enfeite.
+--
+-- O vínculo é por NOME, e o nome tem que ser igual ao que o formulário
+-- grava em visitas.consultor — o mesmo texto que está no CARTEIRA, no
+-- index.html. "Daniel Bojarski" com "y" no fim entra no painel e vê
+-- uma tela vazia, sem erro nenhum. O item 6 confere isso.
+-- ===================================================================
+create table if not exists public.consultores (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  nome    text not null,                    -- igual a visitas.consultor
+  admin   boolean not null default false,   -- true = vê todo mundo
+  criado_em timestamptz default now()
+);
+
+create unique index if not exists consultores_nome_idx
+  on public.consultores (nome) where not admin;
+
+-- Ninguém mexe nisto pela chave do site: sem grant de insert/update/
+-- delete, o vínculo só se edita aqui no SQL Editor, que roda como
+-- service_role e passa por cima da RLS.
+alter table public.consultores enable row level security;
+
+grant select on public.consultores to authenticated;
+
+drop policy if exists "cada um ve seu vinculo" on public.consultores;
+create policy "cada um ve seu vinculo" on public.consultores
+  for select to authenticated
+  using (user_id = auth.uid());
+
+-- As duas funções abaixo são "security definer": rodam com os poderes
+-- de quem as criou e por isso enxergam a tabela consultores inteira.
+-- Sem isso a consulta bateria na RLS logo acima e não acharia nada —
+-- a regra da tabela visitas nunca daria true, e ninguém leria nada.
+--
+-- search_path travado em vazio, com tudo qualificado: uma função
+-- security definer com search_path solto é a receita clássica de
+-- escalar privilégio no Postgres.
+create or replace function public.meu_nome()
+  returns text
+  language sql
+  stable
+  security definer
+  set search_path = ''
+as $func$
+  select nome from public.consultores where user_id = auth.uid()
+$func$;
+
+create or replace function public.sou_admin()
+  returns boolean
+  language sql
+  stable
+  security definer
+  set search_path = ''
+as $func$
+  select coalesce(
+    (select admin from public.consultores where user_id = auth.uid()),
+    false)
+$func$;
+
+revoke execute on function public.meu_nome()  from public, anon;
+revoke execute on function public.sou_admin() from public, anon;
+grant  execute on function public.meu_nome()  to authenticated;
+grant  execute on function public.sou_admin() to authenticated;
+
+-- A regra. Quem não tem vínculo cai no NULL de meu_nome(): a
+-- comparação vira NULL, que não é true, e a linha não sai. Falha
+-- fechado, que é como tem que falhar.
+drop policy if exists "cada um le o seu" on public.visitas;
+create policy "cada um le o seu" on public.visitas
+  for select to authenticated
+  using (public.sou_admin() or consultor = public.meu_nome());
+
+
+-- ===================================================================
+-- 2.2 LIGAR CADA LOGIN AO SEU NOME
+--
+-- Antes de rodar: crie as contas em Authentication > Users > Add user,
+-- com "Auto Confirm User" marcado. Depois edite a lista abaixo e rode
+-- de novo o arquivo — é idempotente, pode repetir à vontade.
+--
+-- A busca é pelo e-mail, para você não precisar copiar uuid nenhum do
+-- painel do Supabase. E-mail que ainda não tem conta é simplesmente
+-- ignorado; o item 6 mostra quem ficou de fora.
+--
+-- admin = true  -> vê todos os registros (você)
+-- admin = false -> vê só as visitas gravadas com aquele nome
+-- ===================================================================
+insert into public.consultores (user_id, nome, admin)
+select u.id, lista.nome, lista.admin
+from (values
+  -- e-mail da conta                     nome em visitas.consultor   admin
+  ('tales@terraforte.agr.br',            'Tales',                    true )
+
+  -- Descomente e preencha conforme criar as contas. Os nomes precisam
+  -- ser exatamente estes — são os que estão no CARTEIRA do index.html.
+  -- ,('alex@terraforte.agr.br',          'Alex',                     false)
+  -- ,('daniel.bojarski@terraforte.agr.br','Daniel Bojarski',         false)
+  -- ,('daniel.prestes@terraforte.agr.br','Daniel Prestes',           false)
+  -- ,('gerson@terraforte.agr.br',        'Gerson',                   false)
+  -- ,('gilson@terraforte.agr.br',        'Gilson',                   false)
+  -- ,('grexe@terraforte.agr.br',         'Grexe',                    false)
+  -- ,('gustavo@terraforte.agr.br',       'Gustavo',                  false)
+  -- ,('jalmir@terraforte.agr.br',        'Jalmir',                   false)
+  -- ,('marcelo@terraforte.agr.br',       'Marcelo',                  false)
+  -- ,('marcos@terraforte.agr.br',        'Marcos',                   false)
+  -- ,('marcal@terraforte.agr.br',        'Marçal',                   false)
+  -- ,('shander@terraforte.agr.br',       'Shander',                  false)
+) as lista(email, nome, admin)
+join auth.users u on lower(u.email) = lower(lista.email)
+on conflict (user_id) do update
+  set nome = excluded.nome, admin = excluded.admin;
 
 
 -- ===================================================================
@@ -270,5 +387,34 @@ select json_build_object(
     select json_agg(viewname order by viewname)
     from pg_views where schemaname = 'public'),
 
-  'bucket_publico', (select public from storage.buckets where id = 'fotos-visitas')
+  'bucket_publico', (select public from storage.buckets where id = 'fotos-visitas'),
+
+  -- Quem já pode entrar e o que cada um alcança
+  'vinculos', (
+    select json_agg(json_build_object(
+      'nome',  c.nome,
+      'email', u.email,
+      'admin', c.admin,
+      'visitas_que_ve', case when c.admin
+        then (select count(*) from public.visitas)
+        else (select count(*) from public.visitas v where v.consultor = c.nome)
+      end) order by c.admin desc, c.nome)
+    from public.consultores c join auth.users u on u.id = c.user_id),
+
+  -- O erro que não dá erro: nome gravado nas visitas que não tem
+  -- login nenhum ligado a ele. Quem estiver nesta lista não consegue
+  -- ver as próprias visitas.
+  'consultores_sem_login', (
+    select coalesce(json_agg(x.consultor order by x.consultor), '[]'::json)
+    from (select distinct v.consultor from public.visitas v
+          where not exists (select 1 from public.consultores c
+                            where c.nome = v.consultor)) x),
+
+  -- O contrário: login ligado a um nome que nunca apareceu em visita
+  -- nenhuma. Costuma ser erro de digitação no item 2.2.
+  'login_sem_visita', (
+    select coalesce(json_agg(c.nome order by c.nome), '[]'::json)
+    from public.consultores c
+    where not c.admin
+      and not exists (select 1 from public.visitas v where v.consultor = c.nome))
 ) as conferencia;
