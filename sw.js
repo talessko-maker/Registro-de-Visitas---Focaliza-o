@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v3";
+const VERSAO = "v4";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 

@@ -303,19 +303,60 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
   cursor:pointer;
 }
 
-/* ---------- aviso de registros na fila ---------- */
+/* ---------- painel dos registros guardados no aparelho ---------- */
 .fila{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   margin:18px 0 -6px;padding:11px 14px;
   background:var(--fundo2);border:1.5px solid var(--linha);
   border-radius:var(--raio);font-size:13.5px;color:var(--tinta);
 }
-.fila span{flex:1;min-width:140px}
+/* Com sinal e nada esperando, o painel vira uma linha discreta: fica no
+   ar para tranquilizar, sem disputar atenção com o formulário. */
+.fila.limpa{
+  padding:2px 0;
+  background:transparent;border-color:transparent;
+  color:var(--tinta-fraca);
+}
+.fila-topo{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fila-luz{flex:none;width:9px;height:9px;border-radius:50%;background:#2E7D32}
+.fila.espera    .fila-luz{background:#B7791F}
+.fila.sem-sinal .fila-luz{background:var(--alerta)}
+.fila-estado{flex:1;min-width:150px}
+/* Em tela estreita o botão não cabe ao lado do texto e cai para a linha
+   de baixo; crescer ali o deixa de largura cheia, com cara de escolha e
+   não de sobra. Em tela larga ele volta para o lado. */
+.fila-topo button{flex:1 1 150px}
 .fila button{
   min-height:36px;padding:0 14px;
   background:#fff;border:1.5px solid var(--apoio);border-radius:8px;
   color:var(--principal);font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;
 }
+.fila button[disabled]{opacity:.5;cursor:default}
+
+/* barra que anda enquanto os registros sobem */
+.fila-barra{
+  height:4px;margin-top:9px;
+  background:var(--linha);border-radius:2px;overflow:hidden;
+}
+.fila-barra i{
+  display:block;height:100%;width:0;
+  background:var(--apoio);transition:width .25s ease;
+}
+
+/* lista do que ainda está no aparelho */
+.fila-lista{list-style:none;margin:10px 0 0;padding:0;max-height:232px;overflow-y:auto}
+.fila-item{
+  display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;
+  padding:8px 0;border-top:1px solid var(--linha);
+}
+.fila-dados{flex:1;min-width:150px}
+.fila-quem{font-weight:500;line-height:1.35}
+.fila-quando{color:var(--tinta-fraca);font-size:12.5px}
+.fila-falha{
+  flex:1 1 100%;               /* linha inteira, abaixo dos botões */
+  margin-top:6px;font-size:12.5px;color:#7A1818;overflow-wrap:anywhere;
+}
+.fila-acoes{display:flex;gap:6px}
+.fila-acoes button{min-height:32px;padding:0 10px;font-size:12.5px}
 
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -333,8 +374,13 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
 
 <main>
   <div class="fila" id="fila" hidden>
-    <span></span>
-    <button type="button" id="fila-tentar">Tentar agora</button>
+    <div class="fila-topo">
+      <span class="fila-luz" aria-hidden="true"></span>
+      <span class="fila-estado" id="fila-estado" role="status" aria-live="polite"></span>
+      <button type="button" id="fila-tentar" hidden>Sincronizar agora</button>
+    </div>
+    <div class="fila-barra" id="fila-barra" hidden><i></i></div>
+    <ul class="fila-lista" id="fila-lista"></ul>
   </div>
 
   <form id="form" novalidate>
@@ -795,8 +841,19 @@ form.addEventListener("submit", async e => {
       texto = "O registro foi enviado para o banco. Não precisa fazer mais nada.";
     } catch (e) {
       console.warn("envio:", e.message);
-      texto = "Sem conexão agora. O registro ficou guardado no aparelho e sobe sozinho "
-            + "quando o sinal voltar — pode seguir para a próxima visita.";
+      if (e.semRede) {
+        texto = "Sem conexão agora. O registro ficou guardado no aparelho e sobe sozinho "
+              + "quando o sinal voltar — pode seguir para a próxima visita.";
+      } else {
+        /* O banco respondeu e recusou. Guarda o motivo junto do registro
+           para que apareça na lista, em vez de sumir no console. */
+        try {
+          await filaGrava({ ...registro, falha: e.message, tentativas: 1 });
+        } catch (err) { console.warn(err); }
+        texto = "O banco recusou o envio desta vez. O registro ficou guardado no aparelho "
+              + "e aparece na lista no alto da página, com o motivo — pode seguir para a "
+              + "próxima visita, que a tentativa continua.";
+      }
     }
     mostraFila();
   } else {
@@ -889,6 +946,19 @@ const filaGrava  = reg => naFila("readwrite", l => l.put(reg));
 const filaRemove = id  => naFila("readwrite", l => l.delete(id));
 const filaLista  = ()  => naFila("readonly",  l => l.getAll());
 
+/* fetch que separa "não saiu do aparelho" de "o servidor respondeu".
+   Sem essa distinção, um erro de permissão no banco fica com cara de
+   falta de sinal e ninguém descobre. */
+async function busca(endereco, opcoes) {
+  try {
+    return await fetch(endereco, opcoes);
+  } catch {
+    const falha = new Error("sem conexão");
+    falha.semRede = true;
+    throw falha;
+  }
+}
+
 /* --- envio de um registro --- */
 async function enviaRegistro(reg) {
   const cab = {
@@ -901,7 +971,7 @@ async function enviaRegistro(reg) {
     const foto = reg.fotos[i];
     if (foto.url) { enderecos.push(foto.url); continue; }
     const caminho = `${reg.data_visita}/${reg.id}-${i + 1}.jpg`;
-    const r = await fetch(
+    const r = await busca(
       `${SUPABASE.url}/storage/v1/object/${SUPABASE.bucket}/${caminho}`, {
         method: "POST",
         headers: { ...cab, "Content-Type": "image/jpeg" },
@@ -947,7 +1017,7 @@ async function enviaRegistro(reg) {
      chave fica visível no HTML. O 409 tratado abaixo cobre exatamente o
      caso que o upsert cobriria: a fila reenviando um registro que já
      entrou e cuja resposta se perdeu. */
-  const r = await fetch(`${SUPABASE.url}/rest/v1/${SUPABASE.tabela}`, {
+  const r = await busca(`${SUPABASE.url}/rest/v1/${SUPABASE.tabela}`, {
     method: "POST",
     headers: {
       ...cab,
@@ -962,44 +1032,173 @@ async function enviaRegistro(reg) {
   }
 }
 
-/* --- tenta esvaziar a fila --- */
+/* ===================================================================
+   5. PAINEL DO QUE ESTÁ GUARDADO NO APARELHO
+   O envio continua automático; o botão só adianta a próxima tentativa.
+   O painel existe para o consultor saber, sem abrir o painel do admin,
+   o que já subiu, o que ainda não subiu e por quê.
+   =================================================================== */
 let enviando = false;
 
+const contagem = n => n === 1 ? "1 visita" : n + " visitas";
+
+/* Barra de progresso do envio. feitos === null apaga a barra. */
+function progresso(feitos, total) {
+  const barra = $("fila-barra");
+  if (feitos === null) {
+    barra.hidden = true;
+    barra.firstElementChild.style.width = "0";
+    return;
+  }
+  barra.hidden = false;
+  barra.firstElementChild.style.width = (100 * feitos / total) + "%";
+  $("fila-estado").textContent =
+    "Enviando " + Math.min(feitos + 1, total) + " de " + total + "…";
+}
+
 async function tentaFila() {
-  if (enviando || !temBanco() || !navigator.onLine) return mostraFila();
+  if (enviando) return;
   enviando = true;
   try {
-    for (const reg of await filaLista()) {
+    const pendentes = await filaLista().catch(() => []);
+    if (!temBanco() || !navigator.onLine || pendentes.length === 0) return;
+
+    await mostraFila();
+
+    for (let i = 0; i < pendentes.length; i++) {
+      const reg = pendentes[i];
+      progresso(i, pendentes.length);
       try {
         await enviaRegistro(reg);
         await filaRemove(reg.id);
       } catch (e) {
         console.warn("fila:", e.message);
-        break;
+        /* Faltou sinal: os próximos vão falhar igual. Para por aqui e
+           espera o "online" — sem aviso na tela, porque não há nada que
+           o consultor possa fazer a respeito. */
+        if (e.semRede) break;
+        /* O banco respondeu e recusou. Tentar de novo sozinho pode não
+           resolver, então o motivo fica anotado no registro e aparece na
+           lista. O registro segue guardado: nada se perde. */
+        reg.falha = e.message;
+        reg.tentativas = (reg.tentativas || 0) + 1;
+        await filaGrava(reg).catch(() => {});
       }
+      desenhaPendentes(await filaLista().catch(() => []));
     }
   } finally {
     enviando = false;
-    mostraFila();
+    await mostraFila();   /* apaga a barra e reescreve o estado */
   }
 }
 
 async function mostraFila() {
-  const aviso = $("fila");
-  if (!aviso) return;
-  let quantos = 0;
-  try { quantos = (await filaLista()).length; } catch {}
-  aviso.hidden = quantos === 0;
-  if (quantos) {
-    aviso.querySelector("span").textContent = quantos === 1
-      ? "1 visita aguardando envio"
-      : quantos + " visitas aguardando envio";
+  const painel = $("fila");
+  if (!painel) return;
+
+  /* Sem banco configurado nada entra na fila — o formulário baixa os
+     arquivos para envio manual. O painel não teria o que dizer. */
+  if (!temBanco()) { painel.hidden = true; return; }
+
+  let pendentes = [];
+  try { pendentes = await filaLista(); } catch {}
+
+  const semSinal = !navigator.onLine;
+  painel.hidden = false;
+  painel.classList.toggle("sem-sinal", semSinal);
+  painel.classList.toggle("espera",    !semSinal && pendentes.length > 0);
+  painel.classList.toggle("limpa",     !semSinal && pendentes.length === 0);
+
+  $("fila-estado").textContent = semSinal
+    ? (pendentes.length
+        ? "Sem conexão — " + contagem(pendentes.length) + " esperando no aparelho"
+        : "Sem conexão. Pode registrar normalmente.")
+    : (pendentes.length
+        ? contagem(pendentes.length) + " esperando envio"
+        : "Tudo enviado. Nada esperando no aparelho.");
+
+  /* Fora de um envio não há progresso nenhum a mostrar. Sem isto a
+     barra ficaria parada na tela depois de uma sincronização. */
+  if (!enviando) progresso(null);
+
+  const botaoSinc = $("fila-tentar");
+  botaoSinc.hidden = pendentes.length === 0;
+  botaoSinc.disabled = enviando || semSinal;
+
+  desenhaPendentes(pendentes);
+}
+
+function desenhaPendentes(pendentes) {
+  const lista = $("fila-lista");
+  if (!lista) return;
+  lista.innerHTML = "";
+
+  for (const reg of pendentes) {
+    const dados = document.createElement("div");
+    dados.className = "fila-dados";
+    dados.appendChild(filaLinha("fila-quem", reg.produtor));
+    dados.appendChild(filaLinha("fila-quando",
+      reg.data_visita.split("-").reverse().join("/") + " · " +
+      (reg.fotos && reg.fotos.length
+        ? reg.fotos.length + (reg.fotos.length === 1 ? " foto" : " fotos")
+        : "sem fotos")));
+    /* Saída manual para um registro que insista em falhar: o consultor
+       manda o PDF ou o JSON por outro caminho sem perder a visita. */
+    const acoes = document.createElement("div");
+    acoes.className = "fila-acoes";
+    acoes.appendChild(filaBotao("PDF", "Baixar o PDF desta visita",
+      () => baixaPdf(reg)));
+    acoes.appendChild(filaBotao("JSON", "Baixar os dados desta visita para envio manual",
+      () => {
+        const { falha, tentativas, ...limpo } = reg;
+        baixaArquivo(
+          new Blob([JSON.stringify(limpo, null, 2)], { type: "application/json" }),
+          nomeArquivo(reg, ".json"));
+      }));
+
+    const item = document.createElement("li");
+    item.className = "fila-item";
+    item.append(dados, acoes);
+
+    /* A garantia vem primeiro: quem está na lavoura precisa saber que não
+       perdeu a visita. O texto cru do erro fica no fim, curto, porque só
+       serve para quem for investigar. */
+    if (reg.falha) {
+      item.appendChild(filaLinha("fila-falha",
+        "Não foi aceito pelo banco — segue guardado e vai ser tentado de "
+        + "novo. (" + reg.falha.slice(0, 120) + ")"));
+    }
+
+    lista.appendChild(item);
   }
 }
 
-window.addEventListener("online", tentaFila);
+function filaLinha(classe, texto) {
+  const div = document.createElement("div");
+  div.className = classe;
+  div.textContent = texto;
+  return div;
+}
+
+function filaBotao(rotulo, titulo, acao) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = rotulo;
+  b.title = titulo;
+  b.addEventListener("click", acao);
+  return b;
+}
+
+window.addEventListener("online",  tentaFila);
+window.addEventListener("offline", mostraFila);
+/* Em celular o "online" nem sempre chega: o aparelho recupera o sinal
+   com a aba em segundo plano e não avisa ninguém. Voltar ao formulário
+   é o outro momento em que vale tentar. */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") tentaFila();
+});
+$("fila-tentar").addEventListener("click", tentaFila);
 tentaFila();
-if ($("fila-tentar")) $("fila-tentar").addEventListener("click", tentaFila);
 
 </script>
 
