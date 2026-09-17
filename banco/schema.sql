@@ -180,42 +180,20 @@ create policy "cada um le o seu" on public.visitas
 -- ===================================================================
 -- 2.2 LIGAR CADA LOGIN AO SEU NOME
 --
--- Antes de rodar: crie as contas em Authentication > Users > Add user,
--- com "Auto Confirm User" marcado. Depois edite a lista abaixo e rode
--- de novo o arquivo — é idempotente, pode repetir à vontade.
+-- A lista de pessoas NÃO está neste arquivo, de propósito: ela fica em
+-- banco/vinculos.sql, que o .gitignore segura fora do repositório.
 --
--- A busca é pelo e-mail, para você não precisar copiar uuid nenhum do
--- painel do Supabase. E-mail que ainda não tem conta é simplesmente
--- ignorado; o item 6 mostra quem ficou de fora.
+-- Este repositório é público. A regra de acesso pode ser pública sem
+-- problema nenhum — ela é forte por ser regra, não por ser secreta.
+-- Já a lista de e-mails corporativos, e sobretudo a informação de quem
+-- é admin do banco de visitas, é material de phishing pronto.
 --
--- admin = true  -> vê todos os registros (você)
--- admin = false -> vê só as visitas gravadas com aquele nome
+-- Então: a REGRA mora aqui, versionada. As PESSOAS moram lá, só na
+-- máquina. Rode este arquivo primeiro, o vinculos.sql depois.
+--
+-- Sem nenhum vínculo cadastrado, ninguém lê nada — nem quem tem conta.
+-- É o padrão certo: quem manda liberar é você, não o cadastro.
 -- ===================================================================
-insert into public.consultores (user_id, nome, admin)
-select u.id, lista.nome, lista.admin
-from (values
-  -- e-mail da conta                     nome em visitas.consultor   admin
-  ('tales@terraforte.agr.br',            'Tales',                    true )
-
-  -- Descomente e preencha conforme criar as contas. Os nomes precisam
-  -- ser exatamente estes — são os que estão no CARTEIRA do index.html.
-  -- ,('alex@terraforte.agr.br',          'Alex',                     false)
-  -- ,('daniel.bojarski@terraforte.agr.br','Daniel Bojarski',         false)
-  -- ,('daniel.prestes@terraforte.agr.br','Daniel Prestes',           false)
-  -- ,('gerson@terraforte.agr.br',        'Gerson',                   false)
-  -- ,('gilson@terraforte.agr.br',        'Gilson',                   false)
-  -- ,('grexe@terraforte.agr.br',         'Grexe',                    false)
-  -- ,('gustavo@terraforte.agr.br',       'Gustavo',                  false)
-  -- ,('jalmir@terraforte.agr.br',        'Jalmir',                   false)
-  -- ,('marcelo@terraforte.agr.br',       'Marcelo',                  false)
-  -- ,('marcos@terraforte.agr.br',        'Marcos',                   false)
-  -- ,('marcal@terraforte.agr.br',        'Marçal',                   false)
-  -- ,('shander@terraforte.agr.br',       'Shander',                  false)
-) as lista(email, nome, admin)
-join auth.users u on lower(u.email) = lower(lista.email)
-on conflict (user_id) do update
-  set nome = excluded.nome, admin = excluded.admin;
-
 
 -- ===================================================================
 -- 3. AS FOTOS

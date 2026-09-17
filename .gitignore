@@ -11,3 +11,7 @@ desktop.ini
 
 .vercel
 .env*
+
+# Vinculo conta -> consultor: e-mails e quem e admin.
+# O repositorio e publico; esta lista fica so na maquina.
+banco/vinculos.sql
