@@ -467,7 +467,8 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
         <input type="file" id="fotos-camera" accept="image/*" multiple capture="environment" hidden>
         <input type="file" id="fotos" accept="image/*" multiple hidden>
         <div class="miniaturas" id="miniaturas"></div>
-        <p class="dica">Tire na hora ou escolha imagens já salvas no aparelho.
+        <p class="dica">Tire na hora ou escolha imagens já salvas no aparelho —
+           até <span id="max-fotos">10</span> por visita.
            As imagens são reduzidas no próprio celular antes do envio.</p>
       </div>
     </fieldset>
@@ -729,13 +730,15 @@ $("checklist").innerHTML = ITENS.map(([id, rotulo, nota]) => `
   </label>`).join("");
 
 /* --- fotos com redução no cliente --- */
+const MAX_FOTOS = 10;
+
 $("btn-camera").addEventListener("click",  () => $("fotos-camera").click());
 $("btn-galeria").addEventListener("click", () => $("fotos").click());
 
 async function recebeFotos(e) {
   for (const arq of [...e.target.files]) {
-    if (fotos.length >= 6) {
-      mostraErro("Limite de 6 fotos por registro.");
+    if (fotos.length >= MAX_FOTOS) {
+      mostraErro("Limite de " + MAX_FOTOS + " fotos por registro.");
       break;
     }
     try {
@@ -772,6 +775,10 @@ function reduz(arquivo) {
     leitor.readAsDataURL(arquivo);
   });
 }
+
+/* A dica anuncia o limite; ler da constante evita que os dois números
+   se separem numa mudança futura. */
+if ($("max-fotos")) $("max-fotos").textContent = MAX_FOTOS;
 
 function desenhaFotos() {
   $("miniaturas").innerHTML = fotos.map((f, i) => `
