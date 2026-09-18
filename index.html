@@ -430,6 +430,14 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
       </div>
 
       <div class="campo">
+        <label for="relator">Relatório feito por
+          <span class="opcional">— opcional</span></label>
+        <select id="relator" name="relator">
+          <option value="">Selecione</option>
+        </select>
+      </div>
+
+      <div class="campo">
         <label for="produtor">Produtor focalizado</label>
         <select id="produtor" name="produtor" required disabled>
           <option value="">Selecione o consultor primeiro</option>
@@ -633,6 +641,10 @@ const CARTEIRA = [
   ["Shander","MARCIO PAUL","Canoinhas"]
 ];
 
+/* Quem digitou o relatório, quando não foi o próprio consultor da
+   visita. Para incluir ou tirar alguém, edite só esta linha. */
+const RELATORES = ["Yuri", "Guilherme"];
+
 /* ===================================================================
    3. CHECKLIST DE SITUAÇÃO
    Mudou de lugar: está em /relatorio.js, que o formulário e o painel
@@ -713,6 +725,9 @@ function limpaHtml(origem) {
   })(origem, saida);
   return saida.innerHTML.trim();
 }
+
+/* --- popular quem pode assinar o relatório --- */
+RELATORES.forEach(nome => $("relator").add(new Option(nome, nome)));
 
 /* --- popular consultores --- */
 [...new Set(CARTEIRA.map(l => l[0]))]
@@ -862,6 +877,7 @@ form.addEventListener("submit", async e => {
     municipio: (CARTEIRA.find(x => x[1] === selProdutor.value) || [])[2] || "",
     data_visita: $("data").value,
     talhao: $("talhao").value.trim(),
+    relator: $("relator").value,
     descricao: editor.innerText.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim(),
     descricao_html: limpaHtml(editor),
     acao: $("acao").value.trim(),
@@ -921,6 +937,7 @@ form.addEventListener("submit", async e => {
     <dt>Consultor</dt><dd>${registro.consultor}</dd>
     <dt>Data da visita</dt><dd>${registro.data_visita.split("-").reverse().join("/")}</dd>
     ${registro.talhao ? `<dt>Talhão</dt><dd>${registro.talhao}</dd>` : ""}
+    ${registro.relator ? `<dt>Relatório feito por</dt><dd>${registro.relator}</dd>` : ""}
     <dt>Fotos</dt><dd>${fotos.length || "nenhuma"}</dd>`;
   form.hidden = true;
   $("pronto").hidden = false;
@@ -1058,7 +1075,8 @@ async function enviaRegistro(reg) {
       situacao: reg.situacao,
       area_manejo_ha: reg.area_manejo_ha,
       area_experimental_ha: reg.area_experimental_ha,
-      talhao: reg.talhao || null
+      talhao: reg.talhao || null,
+      relator: reg.relator || null
     },
     registrado_em: reg.enviado_em
   };

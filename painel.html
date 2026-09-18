@@ -575,6 +575,7 @@ function cartao(v) {
 
   const areas = [
     extras.talhao ? `<dt>Talhão / referência</dt><dd>${escapa(extras.talhao)}</dd>` : "",
+    extras.relator ? `<dt>Relatório feito por</dt><dd>${escapa(extras.relator)}</dd>` : "",
     extras.area_manejo_ha      != null ? `<dt>Área de manejo</dt><dd>${extras.area_manejo_ha} ha</dd>` : "",
     extras.area_experimental_ha != null ? `<dt>Área experimental</dt><dd>${extras.area_experimental_ha} ha</dd>` : ""
   ].join("");
@@ -655,6 +656,7 @@ async function paraRelatorio(v) {
     municipio: v.municipio || "",
     data_visita: v.data_visita,
     talhao: extras.talhao || "",
+    relator: extras.relator || "",
     descricao: v.descricao || "",
     descricao_html: v.descricao_html || "",
     acao: v.acao || "",
@@ -707,6 +709,7 @@ function csv() {
     ["produtor",     v => v.produtor],
     ["municipio",    v => v.municipio],
     ["talhao",       v => ((v.extras || {}).talhao) || ""],
+    ["relator",      v => ((v.extras || {}).relator) || ""],
     ["formulario",   v => ORIGENS[v.origem] || v.origem],
     ["area_manejo_ha",       v => (v.extras || {}).area_manejo_ha],
     ["area_experimental_ha", v => (v.extras || {}).area_experimental_ha],
