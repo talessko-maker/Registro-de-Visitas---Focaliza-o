@@ -58,6 +58,10 @@ header p{margin:4px 0 0;font-size:13px;font-weight:400;color:#C3D8F2}
 .risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
 .topo{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* Os dois botões andam juntos. Soltos no .sessao, em tela estreita o
+   e-mail gruda no primeiro e empurra o "Sair" sozinho para a linha de
+   baixo; agrupados, o par inteiro é que desce. */
+.acoes-sessao{display:flex;align-items:center;gap:10px}
 #quem-entrou{font-size:13px;color:#C3D8F2}
 button.sair{
   background:rgba(255,255,255,.14);
@@ -67,6 +71,21 @@ button.sair{
   font-size:14px;
 }
 button.sair:hover{background:rgba(255,255,255,.24)}
+/* Caminho de volta ao formulário, o par do botão "Painel" que existe
+   lá. Mesma roupa do "Sair", e o "+" é o que evita a troca de um pelo
+   outro na pressa — sair por engano custa a sessão. */
+a.nova{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:var(--raio);
+  color:#fff;text-decoration:none;
+  font-size:14px;font-weight:600;
+  white-space:nowrap;
+}
+a.nova:hover{background:rgba(255,255,255,.24)}
+a.nova svg{flex:none}
 
 /* ---------- estrutura ---------- */
 main{max-width:940px;margin:0 auto;padding:20px 16px 40px}
@@ -204,7 +223,16 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
     </div>
     <div class="sessao" id="sessao" hidden>
       <span id="quem-entrou"></span>
-      <button type="button" class="sair" id="btn-sair">Sair</button>
+      <div class="acoes-sessao">
+        <a class="nova" href="/">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 3.2v9.6M3.2 8h9.6" stroke="currentColor"
+                  stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Nova visita
+        </a>
+        <button type="button" class="sair" id="btn-sair">Sair</button>
+      </div>
     </div>
   </div>
 </header>
