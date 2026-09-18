@@ -574,6 +574,7 @@ function cartao(v) {
        <img src="${escapa(u)}" alt="Foto da visita" loading="lazy"></a>`).join("");
 
   const areas = [
+    extras.talhao ? `<dt>Talhão / referência</dt><dd>${escapa(extras.talhao)}</dd>` : "",
     extras.area_manejo_ha      != null ? `<dt>Área de manejo</dt><dd>${extras.area_manejo_ha} ha</dd>` : "",
     extras.area_experimental_ha != null ? `<dt>Área experimental</dt><dd>${extras.area_experimental_ha} ha</dd>` : ""
   ].join("");
@@ -653,6 +654,7 @@ async function paraRelatorio(v) {
     produtor: v.produtor,
     municipio: v.municipio || "",
     data_visita: v.data_visita,
+    talhao: extras.talhao || "",
     descricao: v.descricao || "",
     descricao_html: v.descricao_html || "",
     acao: v.acao || "",
@@ -704,6 +706,7 @@ function csv() {
     ["consultor",    v => v.consultor],
     ["produtor",     v => v.produtor],
     ["municipio",    v => v.municipio],
+    ["talhao",       v => ((v.extras || {}).talhao) || ""],
     ["formulario",   v => ORIGENS[v.origem] || v.origem],
     ["area_manejo_ha",       v => (v.extras || {}).area_manejo_ha],
     ["area_experimental_ha", v => (v.extras || {}).area_experimental_ha],

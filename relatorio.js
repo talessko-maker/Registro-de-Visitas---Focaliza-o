@@ -209,6 +209,7 @@ function gerarPdf(r) {
   campo("Município",  r.municipio,       M + col,     47);
   campo("Data da visita", br(r.data_visita), M + 2 * col, 47);
   campo("Consultor responsável", r.consultor, M, 61);
+  campo("Talhão / referência", r.talhao, M + col, 61);
 
   y = 72;
   doc.setDrawColor(...PDF_CORES.linha).setLineWidth(0.3);

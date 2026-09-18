@@ -441,6 +441,13 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
         <label for="data">Data da visita</label>
         <input type="date" id="data" name="data" required>
       </div>
+
+      <div class="campo">
+        <label for="talhao">Nome do talhão / referência
+          <span class="opcional">— opcional</span></label>
+        <input type="text" id="talhao" name="talhao" maxlength="80"
+               autocomplete="off" placeholder="Como identificar a área visitada">
+      </div>
     </fieldset>
 
     <fieldset>
@@ -854,6 +861,7 @@ form.addEventListener("submit", async e => {
     produtor: selProdutor.value,
     municipio: (CARTEIRA.find(x => x[1] === selProdutor.value) || [])[2] || "",
     data_visita: $("data").value,
+    talhao: $("talhao").value.trim(),
     descricao: editor.innerText.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim(),
     descricao_html: limpaHtml(editor),
     acao: $("acao").value.trim(),
@@ -912,6 +920,7 @@ form.addEventListener("submit", async e => {
     <dt>Produtor</dt><dd>${registro.produtor}</dd>
     <dt>Consultor</dt><dd>${registro.consultor}</dd>
     <dt>Data da visita</dt><dd>${registro.data_visita.split("-").reverse().join("/")}</dd>
+    ${registro.talhao ? `<dt>Talhão</dt><dd>${registro.talhao}</dd>` : ""}
     <dt>Fotos</dt><dd>${fotos.length || "nenhuma"}</dd>`;
   form.hidden = true;
   $("pronto").hidden = false;
@@ -1043,10 +1052,13 @@ async function enviaRegistro(reg) {
     acao: reg.acao,
     prazo_acao: reg.prazo_acao || null,
     fotos: enderecos,
+    /* O talhão entra no extras junto do checklist e das áreas: é jsonb,
+       então cabe sem coluna nova e sem mexer na regra de acesso. */
     extras: {
       situacao: reg.situacao,
       area_manejo_ha: reg.area_manejo_ha,
-      area_experimental_ha: reg.area_experimental_ha
+      area_experimental_ha: reg.area_experimental_ha,
+      talhao: reg.talhao || null
     },
     registrado_em: reg.enviado_em
   };
