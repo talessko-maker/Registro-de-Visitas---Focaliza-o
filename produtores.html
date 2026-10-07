@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#034998">
 <meta name="robots" content="noindex, nofollow">
-<title>Painel de visitas — Focalização</title>
+<title>Produtores focalizados — Focalização</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -14,8 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ---------------------------------------------------------------
-   PAINEL — leitura dos registros, para quem tem conta.
-   Só lê. A gravação continua sendo só pelo formulário.
+   PRODUTORES FOCALIZADOS — situação e área Syngenta de cada
+   produtor, uma página por consultor. Saíram do formulário de
+   visita: são do produtor, não da visita.
    --------------------------------------------------------------- */
 :root{
   --principal:#034998;
@@ -27,6 +28,7 @@
   --linha:#C6D6E9;
   --marcado:#E8F1FC;
   --alerta:#A32020;
+  --certo:#2E7D32;
   --raio:10px;
   --logo-tf:url("data:image/png;base64,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");
   --logo-foc-tela:url("data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjE1NSAzODYgMTYyNCAyNTIiPjxkZWZzPjxzdHlsZT4uc3QwIHtmaWxsOiAjMDM0OTk4O30uc3QxIHtmaWxsOiAjZmZmO30uc3QyIHtmaWxsOiAjZmZmO308L3N0eWxlPjwvZGVmcz48Zz48cG9seWdvbiBjbGFzcz0ic3QxIiBwb2ludHM9IjExMTEuOTcgNDYxLjU4IDEwODAuMjEgNDYxLjY2IDEwODAuMTYgNDMwLjc4IDExMTEuOTggNDMwLjc3IDExMTEuOTcgNDYxLjU4Ii8+PGc+PHBvbHlnb24gY2xhc3M9InN0MSIgcG9pbnRzPSIxMjQyLjQ2IDU4Ny4yNSAxMTM0LjQyIDU4Ny4yOCAxMTM0LjUgNTYzLjUgMTE5OS45OSA0OTcuNDYgMTEzNC40MSA0OTcuNDMgMTEzNC4zNiA0NzMuMDQgMTI0Mi41IDQ3My4wMyAxMjQyLjM1IDQ5Ny4wOSAxMTc2LjkyIDU2Mi41NCAxMjQyLjQ4IDU2Mi42OSAxMjQyLjQ2IDU4Ny4yNSIvPjxnPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xMjYxLjY4LDU2NC43Yy01LjI1LTE4LjU2LDIuODMtNDAuNCwyMC44MS00NC43OCw3LjgyLTEuOSwxNS41Mi0yLjAxLDIzLjU3LTIuMDFoMzguOTZjLjMyLTUuMTQtLjA4LTEwLjcxLTMuMzYtMTQuODMtMy40NS00LjMzLTktNC44OC0xNC40MS01LjQ5bC01OC45Ni0uMi0uMDMtMjQuMzRoNjMuOTVzMTQuNTIsMS4yMiwxNC41MiwxLjIyYzEwLjIsMS44NSwxOC41OSw3LjcyLDIzLjgxLDE2LjY4LDQuNzYsOC4wMyw2LjM3LDE2LjgzLDYuMzgsMjYuMzZsLjA2LDY5Ljk3LTc5LjU5LS4wN2MtNi40OSwwLTEyLjMyLS42NC0xOC4zMy0yLjU0LTguNDctMy43OS0xNC44Mi0xMC45LTE3LjM4LTE5Ljk1WiIvPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMzQ1LjE4LDU2Mi41N2gtMzkuOTRjLTMuNzYsMC03LjY0LS44Mi0xMC41NC0zLjE0cy0yLjk5LTYuODktMS45LTEwLjI4Yy43OS0yLjQ3LDMuMTktNi4yOSw3LjExLTYuMzNsNDUuMjEtLjQ1LjA1LDIwLjJaIi8+PC9nPjwvZz48cG9seWdvbiBjbGFzcz0ic3QxIiBwb2ludHM9IjEwNDkuNTcgNTg3LjA3IDEwMTcuNzUgNTg3LjIxIDEwMTcuNzUgNDMwLjgxIDEwNDkuNTYgNDMwLjggMTA0OS41NyA1ODcuMDciLz48cG9seWdvbiBjbGFzcz0ic3QxIiBwb2ludHM9IjExMTEuOTcgNTg3LjA2IDEwODAuMTYgNTg3LjI1IDEwODAuMTYgNDczLjA4IDExMTEuOTcgNDcyLjk2IDExMTEuOTcgNTg3LjA2Ii8+PGc+PGc+PGc+PHBhdGggY2xhc3M9InN0MSIgZD0iTTg5MS4wOSw1ODQuODFjLTIwLjA1LTguNjItMjQuMzYtMzQuMjEtMTMuNzktNTIuMDcsNC4zOC03LjQxLDExLjM2LTEyLjY2LDE5LjgtMTMuNDhsMTMuMjQtMS4yOSw0Ni41Ny0uMTdjLS4wNC01LjQtLjI2LTExLjI0LTMuOTYtMTUuNC0zLjM4LTMuODEtOC41NS00LjA1LTEzLjUxLTQuODZsLTU5LjM0LS4xM3YtMjQuNHM2NC4zMS4wMiw2NC4zMS4wMmwxNC45OCwxLjQ2YzcuOTYuNzcsMTQuMzUsNS40MSwxOS41LDExLjY0LDYsNy42LDkuNTIsMTYuODcsOS41NSwyNi45bC4xOSw3NC4yOC04MC42My0uMTVjLTYuMDEtLjAxLTExLjM2LS43My0xNi45Mi0yLjM1WiIvPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik05NTcuMDEsNTYyLjU4bC00MC4zNi0uMDRjLTMuNDksMC03LjMzLS43Mi05Ljk1LTIuODgtMy4wNS0yLjUyLTMuMzQtNi42MS0yLjIzLTEwLjQ3Ljc2LTIuNjEsMy41NS02LjQyLDcuNDgtNi40NWw0NS4wNC0uMzIuMDIsMjAuMTZaIi8+PC9nPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik04MTIuMDUsNTYyLjQ2bDQxLjgzLjIyLS4wMiwyNC42My01MC44Mi0uMjRjLTkuMTEtLjA0LTE3Ljk3LTEuNjQtMjUuOTEtNi4wMi0yNS41LTE0LjA1LTMxLjQzLTQ4LjE0LTIyLjk0LTc1LjIxLDMuOC0xMi4xMSwxMS43OS0yMi4yNywyMy4yNS0yNy41NSw4LjM4LTMuODYsMTcuMTYtNC42MSwyNi4zNi01LjIybDUwLjA2LS4wOHYyNC40N3MtMzguOTIsMC0zOC45MiwwYy0xMi42OC4wNS0yNS4yOCwzLjg3LTI5LjM4LDE1LjkxLTMuNTEsMTAuMjgtMy44MiwyMS45NS4xNiwzMi4yOHMxNC43MiwxNi43NiwyNi4zMywxNi44MloiLz48L2c+PGc+PHBhdGggY2xhc3M9InN0MSIgZD0iTTU5OC4zNSw0OTQuNjJsLjA4LDI4LjIxLTkzLjI1LS4wMnY2NC40cy0zMy41Ny4wNC0zMy41Ny4wNGwuMDItOTEuMzVjLjc5LTEwLjcxLDEuMDYtMjAuNjUsNC4yNy0zMC43OSw4LjAzLTI1LjMyLDM1LjE3LTM0LjU3LDYwLjkyLTM0LjI1bDYxLjU2LS4wNnYyNy45NXMtNTMuNDMuMDctNTMuNDMuMDdjLTcuNjIuMjItMTQuNzYuODgtMjIuMTQsMi40MS0xNS44NCwzLjI3LTE4Ljg5LDE3Ljk4LTE3LjQsMzMuNDFoOTIuOTJaIi8+PGc+PHBhdGggY2xhc3M9InN0MSIgZD0iTTczMi4yOSw1NTEuMzdjLTEwLjEzLDM0LjQyLTUwLjIxLDQzLjY2LTgxLjg5LDM0LjEzLTE2LjU1LTQuOTgtMjguNzQtMTcuNi0zMy40LTM0LjA5LTguODUtMzEuMzQsMS4zMS02NS43NCwzMy40Mi03Ni4yOSwxNy4zLTUuNjksMzYuMzYtNS4zOCw1My4zMywxLjU1LDEyLjAzLDQuOTIsMjAuNjIsMTQuNzgsMjUuODgsMjYuNjEsNi42OSwxNS4wNSw3LjMzLDMyLjIzLDIuNjYsNDguMDlaIi8+PHBhdGggY2xhc3M9InN0MCIgZD0iTTcwMC4wOCw1NDcuNzRjLTUuMDIsMTUuOTktMjIuODksMjAuMzctMzcuNzEsMTQuNjQtMTcuNDEtNi43My0xOC44NC0zMy41LTEzLjIxLTUwLjMyLDIuNDUtNy4zMyw3Ljk3LTEyLjgzLDE1LjI1LTE0Ljk1LDE0LjUyLTQuMjMsMzAuNTQuMjMsMzUuNTQsMTUuMjEsMy43OCwxMS4zMywzLjc0LDIzLjkzLjEzLDM1LjQyWiIvPjwvZz48L2c+PC9nPjxnPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xNjA4Ljc0LDQ0OC45Yy02LjU0LDExLjc1LTE5LjM1LDEwLjg3LTMxLjc5LDYuNWwtMTQuNjQtNS4xNGMtNC42Ni0xLjYzLTkuMjksMS40Ni0xMC45Nyw3LjM5bC0xNC4wNi4yNmMxLjUtMTMuNjIsNy43My0yNS40NSwyMS40OS0yNS41NCw0LjgzLS4wMyw5LjI2LDEuMzEsMTMuODMsMi44M2wxNS41NCw1LjE2YzIuNi44Niw1LjM3LjM4LDcuNjEtMS40NiwxLjQyLTEuMTcsMi41OS0zLjQ0LDMuMTQtNi4xNWgxNC4yNmMtLjU1LDYuMDctMS43LDExLjI5LTQuNCwxNi4xNVoiLz48Zz48cGF0aCBjbGFzcz0ic3QxIiBkPSJNMTQ3Ny4xLDU5OS45N2M1LjgyLDMuMTUsNy40OCw5LjYxLDcuNDgsMTUuNDksMCw5LjQ3LTYuMzYsMTUuOTMtMTUuNjYsMTUuOTlsLTI1LjA1LjE3LS4wNC0xMS42NywxOS40OS0uNDNjMi43LS4wNiwzLjY4LTMuMjYsMy44Mi01LjI2LjE3LTIuMjktLjIzLTYuMzgtMy4wNS02LjQ0bC0xNC45OS0uMzMtLjA3LTIwLjJjLTkuMzEtLjQzLTE4LjQ1LS40NS0yNy00LjMyLTE0LjQ0LTYuNTMtMjQuMjktMjAuMDQtMjcuOTgtMzUuNDUtNS44Ny0yNC41NC0uMzUtNTYuMSwyMy4wMi02OC41LDguMS00LjMsMTYuOC01LjEyLDI1Ljg5LTUuODZsNTIuMi0uMjF2MjQuNDRzLTQwLjUzLjA2LTQwLjUzLjA2Yy0xMi40Ni4zNy0yNC4xOSw0LjU1LTI3Ljk5LDE2LjQxLTMuMDQsOS40OS0zLjMyLDE5Ljc3LS40NywyOS40MywzLjUxLDExLjg3LDE0LjU0LDE5LjA1LDI2LjkxLDE5LjEybDQyLjA5LjI2LS4wMiwyNC41NS0zMy41NC4wMnYxMC40N2M1LjM0LjA4LDEwLjYzLS4zOSwxNS40NiwyLjIzWiIvPjxnPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xNTM0LjIzLDU4NS4zN2MtMjEtNy4xOC0yNi4zNC0zMy4xNi0xNi4xNy01MS41OCw5LjA4LTE2LjQ0LDI1LjY5LTE1Ljg1LDQzLjg4LTE1Ljg5bDM2LjMxLS4wNmMtLjAyLTUuNDQtLjI1LTExLjMtMy45OS0xNS40NS0zLjUyLTMuOS05LjAxLTQuMjMtMTQuMTctNC44NmwtNTguNjgtLjE0di0yNC4zOXM1Ny4xNy4wMiw1Ny4xNy4wMmwyMC4yNCwxLjFjMTAuNzEsMS41OCwxOS41Nyw3LjczLDI0LjkyLDE3LjEsNS4yMiw4LjY3LDYuMjgsMTguMiw2LjI5LDI4LjQybC4wOSw2Ny42MS03OS4yMi0uMDVjLTUuODgsMC0xMS4xLS42Ni0xNi42OC0xLjg1WiIvPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNTk4LjMyLDU2Mi42bC00MC4zNi0uMDNjLTMuNDcsMC03LjM0LS44MS05LjkyLTIuOTItMy4wOC0yLjUyLTMuMzQtNi42My0yLjIxLTEwLjQ2Ljc3LTIuNjIsMy41OC02LjQzLDcuNTUtNi40NWw0NC45My0uMjV2MjAuMVoiLz48L2c+PC9nPjxnPjxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0xNzcwLjA2LDU1MC40Yy05LjYsMzQuNjMtNDguMjEsNDQuMjktODAuNjMsMzUuNTctMTcuMi00LjYzLTMwLjAzLTE3LjMxLTM0Ljg4LTM0LjMzLTkuNTYtMzMuNTIsMi41Ni02OC45MywzNy45LTc3Ljk1LDEzLjI2LTMuMzgsMjYuODctMy4yNCw0MC4yNSwwLDMzLjE2LDguMDYsNDYuMTcsNDQuOTUsMzcuMzcsNzYuN1oiLz48cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTczNy40NSw1NDcuOTljLTUsMTUuMjktMjEuMjIsMTkuNTUtMzUuNTMsMTUuMTUtOC4wMi0yLjQ2LTEzLjY0LTguNjEtMTUuOTQtMTYuNzItMy4wMy0xMC42OS0yLjk2LTIyLjE3LjE2LTMyLjg1LDQuMzItMTQuNzgsMTcuODQtMTkuODUsMzIuNy0xNy4yNyw5LjE2LDEuNTksMTYuMTYsNy44NSwxOC45MSwxNi45MiwzLjQxLDExLjI0LDMuMzcsMjMuNTQtLjMsMzQuNzdaIi8+PC9nPjwvZz48L2c+PGc+PHBhdGggY2xhc3M9InN0MiIgZD0iTTIyMy4zNSw0ODkuNzJsLTguMDUtMTMuNDRjLTkuMzYtMTcuNi05LjAzLTM4LjIyLDEuNTEtNTYuMTQsOS4wNC0xNS4zOCwyNS45Ni0yNi43Nyw0NS40My0yNy43NmwxNy40MS4wNC01Ni4zLDk3LjMxWiIvPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0yMTcuODEsNTQ1LjM0Yy0yMC4yNC4yLTM3LjgyLTExLjYtNDcuNDEtMjcuNDctMTAuOTItMTguMDgtMTEuMjMtMzkuNDYtMS4zNC01Ny4zOGw3LjYtMTIuNyw1Ni4zNCw5Ny40LTE1LjE5LjE1WiIvPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0zODMuODQsNTU2Ljc5bC04LjA0LDEzLjg1LTU2LjM1LTk3LjM5LDE4LjUtLjA4YzE4Ljk4LDEuMywzNS4yNywxMi41NCw0NC4xMSwyNy4zOSwxMC41OCwxNy43OCwxMS4xMywzOC4zLDEuNzksNTYuMjNaIi8+PHBhdGggY2xhc3M9InN0MiIgZD0iTTM3OS4zMiw0NTMuNzRoLTExMi45N3M4LjI1LTE0LjI2LDguMjUtMTQuMjZjOS44NS0xNy4wNCwyOC43My0yNi4xLDQ4LjAyLTI2LjE3LDE5LjQ0LS4wNywzNy41Myw5LjM0LDQ4LjMsMjUuOWw4LjM5LDE0LjUzWiIvPjxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0yOTEuNzEsNjI1Ljc5bC0xOS4wMy4xNCw1Ni40Mi05Ny42Myw2LjY3LDExLjNjMTAuMiwxNy4yOCwxMC45NSwzOC4xNy43OSw1Ni43Ny04LjUsMTUuNTgtMjUuMDEsMjcuODUtNDQuODUsMjkuNDNaIi8+PHBhdGggY2xhc3M9InN0MiIgZD0iTTI4MS4yOSw1NzIuNzVjLTkuNzgsMTcuOTYtMjYuMzIsMjkuOTMtNDUuNTgsMzEuODgtMjAuMzQsMi4wNS00MC4xLTYuMTctNTIuMTctMjIuNi00LjA3LTUuNTQtNi45OC0xMS4yMi0xMC4zOC0xNy4zOGgxMTIuNTRzLTQuNDEsOC4xMS00LjQxLDguMTFaIi8+PC9nPjwvc3ZnPg==");
@@ -42,7 +44,7 @@ body{
   line-height:1.5;
 }
 
-/* ---------- cabeçalho ---------- */
+/* ---------- cabeçalho (o mesmo do painel) ---------- */
 header{
   background:var(--principal);
   color:#fff;
@@ -58,23 +60,9 @@ header p{margin:4px 0 0;font-size:13px;font-weight:400;color:#C3D8F2}
 .risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
 .topo{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-/* Os dois botões andam juntos. Soltos no .sessao, em tela estreita o
-   e-mail gruda no primeiro e empurra o "Sair" sozinho para a linha de
-   baixo; agrupados, o par inteiro é que desce. */
 .acoes-sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 #quem-entrou{font-size:13px;color:#C3D8F2}
-button.sair{
-  background:rgba(255,255,255,.14);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.4);
-  padding:7px 14px;
-  font-size:14px;
-}
-button.sair:hover{background:rgba(255,255,255,.24)}
-/* Caminho de volta ao formulário, o par do botão "Painel" que existe
-   lá. Mesma roupa do "Sair", e o "+" é o que evita a troca de um pelo
-   outro na pressa — sair por engano custa a sessão. */
-a.nova{
+button.sair,a.nova{
   display:inline-flex;align-items:center;gap:6px;
   padding:7px 14px;
   background:rgba(255,255,255,.14);
@@ -84,17 +72,15 @@ a.nova{
   font-size:14px;font-weight:600;
   white-space:nowrap;
 }
-a.nova:hover{background:rgba(255,255,255,.24)}
-a.nova svg{flex:none}
+button.sair:hover,a.nova:hover{background:rgba(255,255,255,.24)}
 
 /* ---------- estrutura ---------- */
-main{max-width:940px;margin:0 auto;padding:20px 16px 40px}
-h2{font-size:15px;font-weight:600;margin:0 0 10px}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+h2{font-size:17px;font-weight:600;margin:0}
 
-/* ---------- campos ---------- */
 label{display:block;font-size:13px;font-weight:500;color:var(--tinta-fraca);margin-bottom:4px}
 input,select,button{font-family:inherit;font-size:16px}
-input[type=text],input[type=email],input[type=password],input[type=date],select{
+input[type=email],input[type=password],input[type=number]{
   width:100%;
   padding:10px 12px;
   border:1px solid var(--linha);
@@ -102,8 +88,7 @@ input[type=text],input[type=email],input[type=password],input[type=date],select{
   background:#fff;
   color:var(--tinta);
 }
-input:focus,select:focus{outline:2px solid var(--apoio);outline-offset:-1px}
-
+input:focus{outline:2px solid var(--apoio);outline-offset:-1px}
 button{
   border:0;
   border-radius:var(--raio);
@@ -114,98 +99,113 @@ button{
   cursor:pointer;
 }
 button:disabled{opacity:.55;cursor:default}
-button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)}
+button:focus-visible,.opt:focus-within,.consultor:focus-visible{
+  outline:2.5px solid var(--apoio);outline-offset:2px;
+}
 
 /* ---------- login ---------- */
 .entrada{max-width:380px;margin:44px auto;background:#fff;border:1px solid var(--linha);
   border-radius:14px;padding:24px}
-.entrada h2{font-size:17px;margin-bottom:4px}
+.entrada h2{margin-bottom:4px}
 .entrada p.ajuda{margin:0 0 20px;font-size:13px;color:var(--tinta-fraca)}
 .entrada .campo{margin-bottom:14px}
 .entrada button{width:100%;margin-top:6px}
 
 .erro{
-  background:#FBEAEA;
-  border:1px solid #E7B9B9;
-  color:var(--alerta);
-  border-radius:var(--raio);
-  padding:10px 12px;
-  font-size:14px;
-  margin-bottom:14px;
+  background:#FBEAEA;border:1px solid #E7B9B9;color:var(--alerta);
+  border-radius:var(--raio);padding:10px 12px;font-size:14px;margin-bottom:14px;
 }
+.vazio{background:#fff;border:1px dashed var(--linha);border-radius:14px;
+  padding:28px 16px;text-align:center;color:var(--tinta-fraca);font-size:14px}
+.carregando{text-align:center;color:var(--tinta-fraca);font-size:14px;padding:30px}
+[hidden]{display:none!important}
 
-/* ---------- filtros ---------- */
-.filtros{
-  background:#fff;
-  border:1px solid var(--linha);
-  border-radius:14px;
-  padding:16px;
-  margin-bottom:16px;
+/* ---------- menu de consultores ---------- */
+.menu{
+  background:#fff;border:1px solid var(--linha);border-radius:14px;
+  padding:14px 16px;margin-bottom:18px;
 }
-.grade{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-.filtros .acoes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-
-/* ---------- resumo ---------- */
-.resumo{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px}
-.numero{background:#fff;border:1px solid var(--linha);border-radius:14px;padding:14px 16px}
-.numero b{display:block;font-size:24px;font-weight:600;line-height:1.2}
-.numero span{font-size:12px;color:var(--tinta-fraca)}
-.numero.atencao b{color:var(--alerta)}
-
-/* ---------- lista ---------- */
-.contagem{font-size:13px;color:var(--tinta-fraca);margin:0 0 10px}
-.visita{
-  background:#fff;
-  border:1px solid var(--linha);
-  border-radius:14px;
-  margin-bottom:10px;
-  overflow:hidden;
+.menu-rotulo{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--tinta-fraca);margin:0 0 10px}
+.consultores{display:flex;gap:8px;flex-wrap:wrap}
+.consultor{
+  padding:7px 14px;
+  background:#fff;color:var(--principal);
+  border:1.5px solid var(--linha);border-radius:999px;
+  font-size:14px;font-weight:500;
 }
-.visita>summary{
-  list-style:none;
-  cursor:pointer;
+.consultor small{font-weight:400;color:var(--tinta-fraca);margin-left:4px}
+.consultor[aria-current="page"]{background:var(--principal);border-color:var(--principal);color:#fff}
+.consultor[aria-current="page"] small{color:#C3D8F2}
+
+.titulo{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.contagem{font-size:13px;color:var(--tinta-fraca);margin:0 0 14px}
+
+/* ---------- cartão do produtor ---------- */
+.produtor{
+  background:#fff;border:1px solid var(--linha);border-radius:14px;
+  margin-bottom:10px;overflow:hidden;
+}
+.produtor>summary{
+  list-style:none;cursor:pointer;
   padding:14px 16px;
-  display:flex;
-  gap:12px;
-  align-items:baseline;
-  flex-wrap:wrap;
+  display:flex;gap:6px 12px;align-items:baseline;flex-wrap:wrap;
 }
-.visita>summary::-webkit-details-marker{display:none}
-.visita[open]>summary{background:var(--marcado);border-bottom:1px solid var(--linha)}
-.quando{font-weight:600;font-size:14px;white-space:nowrap}
-.quem{font-weight:600;font-size:15px;flex:1 1 200px}
-.por{font-size:13px;color:var(--tinta-fraca)}
+.produtor>summary::-webkit-details-marker{display:none}
+.produtor[open]>summary{background:var(--marcado);border-bottom:1px solid var(--linha)}
+.nome{font-weight:600;font-size:15px;flex:1 1 220px}
+.onde{font-size:13px;color:var(--tinta-fraca)}
+.etiquetas{display:flex;gap:6px;flex-wrap:wrap;flex-basis:100%}
 .etiqueta{
   font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;
   padding:2px 8px;border-radius:999px;background:var(--fundo2);color:var(--principal);
 }
-.etiqueta.vencida{background:#FBEAEA;color:var(--alerta)}
+.etiqueta.falta{background:#FFF4E0;color:#8A5A00}
+.etiqueta.sujo{background:#FBEAEA;color:var(--alerta)}
+
 .corpo{padding:16px}
 .corpo h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;
-  color:var(--tinta-fraca);margin:18px 0 6px;font-weight:600}
-.corpo h3:first-child{margin-top:0}
-.texto{white-space:normal}
-.texto p{margin:0 0 8px}
-.texto ul,.texto ol{margin:0 0 8px;padding-left:22px}
-.fotos{display:flex;gap:8px;flex-wrap:wrap}
-.fotos a{display:block;width:104px;height:104px;border-radius:8px;overflow:hidden;
-  border:1px solid var(--linha);background:var(--fundo2)}
-.fotos img{width:100%;height:100%;object-fit:cover;display:block}
-.marcados{display:flex;gap:6px;flex-wrap:wrap}
-.marcados span{font-size:12px;background:var(--fundo2);color:var(--principal);
-  padding:3px 10px;border-radius:999px}
-.dados{display:grid;gap:4px 18px;grid-template-columns:auto 1fr;font-size:14px;margin:0}
-.dados dt{color:var(--tinta-fraca)}
-.dados dd{margin:0}
+  color:var(--tinta-fraca);margin:0 0 8px;font-weight:600}
+.corpo h3+.dica{margin:-4px 0 10px}
+.dica{margin:6px 0 0;font-size:12.5px;color:var(--tinta-fraca)}
 
-.pe{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;
+/* checklist: o mesmo desenho que existia no formulário */
+.lista{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:20px}
+.opt{
+  position:relative;
+  display:flex;align-items:center;gap:12px;
+  min-height:52px;padding:8px 14px;margin:0;
+  background:#fff;border:1.5px solid var(--linha);border-radius:var(--raio);
+  cursor:pointer;user-select:none;
+  font-size:14.5px;font-weight:400;color:var(--tinta);
+}
+.opt input{position:absolute;opacity:0;width:0;height:0}
+.marca{
+  flex:0 0 auto;width:22px;height:22px;
+  border:2px solid var(--linha);border-radius:5px;background:#fff;
+  display:grid;place-items:center;
+}
+.marca svg{width:14px;height:14px;opacity:0}
+.opt span{line-height:1.35}
+.opt small{display:block;font-size:12px;color:var(--tinta-fraca)}
+.opt:has(input:checked){border-color:var(--apoio);background:var(--marcado)}
+.opt:has(input:checked) .marca{background:var(--apoio);border-color:var(--apoio)}
+.opt:has(input:checked) .marca svg{opacity:1}
+
+/* área em hectares */
+.duplo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.medida{position:relative}
+.medida input{padding-right:40px;min-height:46px}
+.medida i{
+  position:absolute;right:12px;bottom:12px;
+  font-style:normal;font-size:13.5px;color:var(--tinta-fraca);pointer-events:none;
+}
+
+.pe{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:14px;border-top:1px solid var(--linha)}
-.aviso-pdf{font-size:13px;color:var(--alerta)}
-.vazio{background:#fff;border:1px dashed var(--linha);border-radius:14px;
-  padding:28px 16px;text-align:center;color:var(--tinta-fraca);font-size:14px}
-.rodape{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.carregando{text-align:center;color:var(--tinta-fraca);font-size:14px;padding:30px}
-[hidden]{display:none!important}
+.estado{font-size:13px;color:var(--tinta-fraca);flex:1 1 220px}
+.estado.ok{color:var(--certo)}
+.estado.falhou{color:var(--alerta)}
 </style>
 </head>
 <body>
@@ -218,8 +218,8 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
         <span class="risco"></span>
         <span class="lg lg-foc" role="img" aria-label="Focalização"></span>
       </div>
-      <h1>Painel de visitas</h1>
-      <p id="assinatura">Consulta dos registros enviados pelos consultores</p>
+      <h1>Produtores focalizados</h1>
+      <p>Situação e área Syngenta de cada produtor</p>
     </div>
     <div class="sessao" id="sessao" hidden>
       <span id="quem-entrou"></span>
@@ -231,7 +231,7 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
           </svg>
           Nova visita
         </a>
-        <a class="nova" href="/produtores.html">Produtores</a>
+        <a class="nova" href="/painel.html">Painel</a>
         <button type="button" class="sair" id="btn-sair">Sair</button>
       </div>
     </div>
@@ -241,9 +241,9 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 <main>
 
   <!-- ================= LOGIN ================= -->
-  <section class="entrada" id="entrada">
+  <section class="entrada" id="entrada" hidden>
     <h2>Entrar</h2>
-    <p class="ajuda">Acesso restrito. As contas são criadas pelo administrador.</p>
+    <p class="ajuda">O mesmo acesso do painel. As contas são criadas pelo administrador.</p>
     <div class="erro" id="erro-login" hidden></div>
     <form id="form-login">
       <div class="campo">
@@ -258,58 +258,16 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
     </form>
   </section>
 
-  <!-- ================= PAINEL ================= -->
-  <section id="painel" hidden>
+  <!-- ================= PÁGINA ================= -->
+  <section id="pagina" hidden>
+    <nav class="menu" id="menu" aria-label="Consultores" hidden>
+      <p class="menu-rotulo">Consultor</p>
+      <div class="consultores" id="consultores"></div>
+    </nav>
 
-    <div class="filtros">
-      <div class="grade">
-        <div>
-          <label for="f-busca">Buscar no texto</label>
-          <input type="text" id="f-busca" placeholder="produtor, ação, descrição…">
-        </div>
-        <div>
-          <label for="f-consultor">Consultor</label>
-          <select id="f-consultor"><option value="">Todos</option></select>
-        </div>
-        <div>
-          <label for="f-produtor">Produtor</label>
-          <select id="f-produtor"><option value="">Todos</option></select>
-        </div>
-        <div>
-          <label for="f-municipio">Município</label>
-          <select id="f-municipio"><option value="">Todos</option></select>
-        </div>
-        <div>
-          <label for="f-origem">Formulário</label>
-          <select id="f-origem">
-            <option value="">Os dois</option>
-            <option value="focalizacao">Focalização</option>
-            <option value="terra-forte">Terra Forte</option>
-          </select>
-        </div>
-        <div>
-          <label for="f-de">De</label>
-          <input type="date" id="f-de">
-        </div>
-        <div>
-          <label for="f-ate">Até</label>
-          <input type="date" id="f-ate">
-        </div>
-      </div>
-      <div class="acoes">
-        <button type="button" class="leve" id="btn-limpar">Limpar filtros</button>
-        <button type="button" class="leve" id="btn-csv">Exportar CSV</button>
-      </div>
-    </div>
+    <div class="erro" id="erro-pagina" hidden></div>
 
-    <div class="resumo">
-      <div class="numero"><b id="n-visitas">0</b><span>visitas</span></div>
-      <div class="numero"><b id="n-produtores">0</b><span>produtores visitados</span></div>
-      <div class="numero atencao"><b id="n-vencidas">0</b><span>ações vencidas</span></div>
-      <div class="numero"><b id="n-fotos">0</b><span>fotos</span></div>
-    </div>
-
-    <div class="erro" id="erro-painel" hidden></div>
+    <div class="titulo"><h2 id="titulo"></h2></div>
     <p class="contagem" id="contagem"></p>
     <div id="lista"></div>
   </section>
@@ -318,367 +276,363 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 
 </main>
 
-<!-- Carteira, jsPDF e o desenho do relatorio: os mesmos arquivos que o
-     formulario carrega, para o PDF sair identico. O login vem de
-     sessao.js, o mesmo da pagina dos produtores. -->
+<!-- A carteira (produtores e checklist) e o login: os mesmos arquivos
+     do formulário e do painel. -->
 <script src="/carteira.js"></script>
-<script src="/vendor-jspdf.js"></script>
-<script src="/relatorio.js"></script>
 <script src="/sessao.js"></script>
 
 <script>
 /* ===================================================================
    1. CONFIGURAÇÃO
-   A mesma chave do formulário. Ela não lê nada sozinha: quem abre a
-   leitura é o login, com a regra "admin le" do banco.
+   A mesma chave do formulário. Sozinha ela não lê nem grava nada aqui:
+   a tabela situacao_produtor só abre para quem entrou com conta, e
+   cada consultor só alcança o próprio nome (schema.sql, item 2.3).
    =================================================================== */
 const SUPABASE = {
   url:   "https://iozeyyuftogrpsndkrvj.supabase.co",
   chave: "sb_publishable_41oi3yeqR7h4BxPAdEcQow_aQ6by_sJ",
-  tabela: "visitas"
+  tabela: "situacao_produtor"
 };
 
-/* O checklist (ITENS) vem de /carteira.js, o mesmo arquivo que o
-   formulário carrega — item novo se cadastra num lugar só. Aqui só
-   viro a lista em um mapa de id para rótulo. */
-const ROTULOS = Object.fromEntries(ITENS.map(([id, rotulo]) => [id, rotulo]));
-
-const ORIGENS = { focalizacao: "Focalização", "terra-forte": "Terra Forte" };
-
 const $ = id => document.getElementById(id);
+const chave = (consultor, produtor) => consultor + "\u0001" + produtor;
 
-let visitas = [];    /* tudo o que veio do banco */
+let eu = null;          /* { nome, admin } — o vínculo da conta */
+let atual = {};         /* chave -> última linha de situacao_produtor */
+let daVisita = {};      /* chave -> situação da última visita que a trazia */
+let consultorDaVez = "";
+let produtoresDaVez = [];   /* linhas da CARTEIRA do consultor escolhido */
 
 /* ===================================================================
-   2. SESSÃO
-   O login mora em /sessao.js, o mesmo da página dos produtores:
-   quem entrou numa já está dentro da outra.
-   =================================================================== */
-
-/* ===================================================================
-   3. TELAS
+   2. TELAS
    =================================================================== */
 function mostraLogin(aviso) {
   esquece();
-  visitas = [];
+  eu = null; atual = {}; daVisita = {};
   $("lista").innerHTML = "";
-  $("painel").hidden = true;
+  $("pagina").hidden = true;
   $("carregando").hidden = true;
   $("sessao").hidden = true;
   $("entrada").hidden = false;
-  $("assinatura").textContent = "Consulta dos registros enviados pelos consultores";
   if (aviso) {
     $("erro-login").textContent = aviso;
     $("erro-login").hidden = false;
   }
 }
 
-async function mostraPainel() {
+function erroNaPagina(texto) {
+  $("erro-pagina").textContent = texto;
+  $("erro-pagina").hidden = false;
+}
+
+async function mostraPagina() {
   $("entrada").hidden = true;
-  $("painel").hidden = true;
+  $("pagina").hidden = true;
+  $("erro-pagina").hidden = true;
   $("carregando").hidden = false;
   $("quem-entrou").textContent = sessao.email;
   $("sessao").hidden = false;
 
   try {
-    const dados = await pede(
-      `/rest/v1/${SUPABASE.tabela}` +
-      `?select=*&order=data_visita.desc,registrado_em.desc&limit=2000`);
-    if (dados === null) return;            /* caiu no login */
-    visitas = dados;
-    preencheFiltros();
-    desenha();
+    /* A regra da tabela consultores só devolve a linha da própria conta. */
+    const vinculo = await pede("/rest/v1/consultores?select=nome,admin");
+    if (vinculo === null) return;           /* caiu no login */
+    eu = vinculo[0] || null;
+
     $("carregando").hidden = true;
-    $("painel").hidden = false;
+    $("pagina").hidden = false;
+
+    if (!eu) {
+      $("menu").hidden = true;
+      $("titulo").textContent = "";
+      $("contagem").textContent = "";
+      $("lista").innerHTML = `<div class="vazio">Sua conta ainda não está ligada a
+        nenhum consultor. Peça ao administrador para fazer o vínculo.</div>`;
+      return;
+    }
+
+    const [linhas, visitas] = await Promise.all([
+      pede(`/rest/v1/${SUPABASE.tabela}` +
+        "?select=consultor,produtor,situacao,area_manejo_ha,area_experimental_ha,alterado_em" +
+        "&order=alterado_em.desc&limit=5000"),
+      pede("/rest/v1/visitas?select=consultor,produtor,data_visita,extras" +
+        "&order=data_visita.desc,registrado_em.desc&limit=2000")
+    ]);
+    if (linhas === null || visitas === null) return;
+
+    /* Vêm do mais novo para o mais velho: a primeira de cada par vale. */
+    atual = {};
+    for (const l of linhas) {
+      const k = chave(l.consultor, l.produtor);
+      if (!atual[k]) atual[k] = l;
+    }
+
+    /* Antes desta página a situação ia em cada visita. Enquanto um
+       produtor não for salvo aqui, a última visita que a trazia
+       preenche o cartão — para ninguém ter de remarcar do zero. */
+    daVisita = {};
+    for (const v of visitas) {
+      const x = v.extras || {};
+      if (!x.situacao) continue;
+      const k = chave(v.consultor, v.produtor);
+      if (!daVisita[k]) daVisita[k] = {
+        situacao: x.situacao,
+        area_manejo_ha: x.area_manejo_ha == null ? null : x.area_manejo_ha,
+        area_experimental_ha: x.area_experimental_ha == null ? null : x.area_experimental_ha,
+        data_visita: v.data_visita
+      };
+    }
+
+    montaMenu();
   } catch (e) {
     console.error(e);
     $("carregando").hidden = true;
-    $("painel").hidden = false;
-    $("erro-painel").textContent =
-      "Não foi possível carregar os registros. " + e.message;
-    $("erro-painel").hidden = false;
+    $("pagina").hidden = false;
+    erroNaPagina("Não foi possível carregar os produtores. " + e.message);
   }
 }
 
 /* ===================================================================
-   4. FILTROS
-   A lista inteira vem de uma vez e a filtragem é aqui na tela: são
-   poucos milhares de linhas, e assim o filtro responde na hora.
+   3. MENU DE CONSULTORES
+   O admin vê todos e escolhe; o consultor vê só a própria página. A
+   tela só organiza: quem decide o que cada um alcança é a regra do
+   banco.
    =================================================================== */
-function preencheFiltros() {
-  const enche = (id, valores) => {
-    const sel = $(id);
-    const atual = sel.value;
-    sel.length = 1;
-    [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"))
-      .forEach(v => sel.add(new Option(v, v)));
-    sel.value = atual;
-  };
-  enche("f-consultor", visitas.map(v => v.consultor));
-  enche("f-produtor",  visitas.map(v => v.produtor));
-  enche("f-municipio", visitas.map(v => v.municipio));
+const nomesDaCarteira = () =>
+  [...new Set(CARTEIRA.map(l => l[0]))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+function montaMenu() {
+  const nomes = eu.admin ? nomesDaCarteira() : [eu.nome];
+
+  $("menu").hidden = !eu.admin;
+  if (eu.admin) {
+    $("consultores").innerHTML = nomes.map(n => {
+      const qtd = CARTEIRA.filter(l => l[0] === n).length;
+      return `<button type="button" class="consultor" data-nome="${escapa(n)}">${escapa(n)}<small>${qtd}</small></button>`;
+    }).join("");
+  }
+
+  /* O consultor escolhido fica no endereço: dá para voltar a ele
+     depois de recarregar, e para mandar o link de uma página. */
+  const pedido = decodeURIComponent(location.hash.slice(1));
+  escolhe(nomes.includes(pedido) ? pedido : nomes[0]);
 }
 
-function filtradas() {
-  const busca = $("f-busca").value.trim().toLowerCase();
-  const consultor = $("f-consultor").value;
-  const produtor  = $("f-produtor").value;
-  const municipio = $("f-municipio").value;
-  const origem    = $("f-origem").value;
-  const de  = $("f-de").value;
-  const ate = $("f-ate").value;
+function escolhe(nome) {
+  if (algumSujo() && !confirm("Há alterações não salvas. Trocar de consultor mesmo assim?")) return;
 
-  return visitas.filter(v => {
-    if (consultor && v.consultor !== consultor) return false;
-    if (produtor  && v.produtor  !== produtor)  return false;
-    if (municipio && v.municipio !== municipio) return false;
-    if (origem    && v.origem    !== origem)    return false;
-    if (de  && v.data_visita < de)  return false;
-    if (ate && v.data_visita > ate) return false;
-    if (busca) {
-      const palheiro = [v.produtor, v.consultor, v.municipio, v.descricao, v.acao]
-        .join(" ").toLowerCase();
-      if (!palheiro.includes(busca)) return false;
-    }
-    return true;
+  consultorDaVez = nome;
+  if (eu.admin) history.replaceState(null, "", "#" + encodeURIComponent(nome));
+  document.querySelectorAll(".consultor").forEach(b => {
+    if (b.dataset.nome === nome) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
   });
+
+  produtoresDaVez = CARTEIRA.filter(l => l[0] === nome)
+    .sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  desenha();
 }
 
 /* ===================================================================
-   5. DESENHO
+   4. DESENHO
    =================================================================== */
-const hoje = new Date().toISOString().slice(0, 10);
-const br = d => d ? d.split("-").reverse().join("/") : "";
 const escapa = t => String(t == null ? "" : t)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;");
-
-/* A descrição vem com formatação. O formulário já limpa na entrada;
-   aqui limpa de novo, porque texto de terceiro nunca entra cru. */
-const TAGS_OK = { B:1, STRONG:1, I:1, EM:1, U:1, BR:1, UL:1, OL:1, LI:1, P:1, DIV:1 };
-function limpaHtml(html) {
-  const caixa = document.createElement("div");
-  caixa.innerHTML = html || "";
-  (function anda(no) {
-    for (const filho of [...no.children]) {
-      anda(filho);
-      if (!TAGS_OK[filho.tagName]) filho.replaceWith(...filho.childNodes);
-      else [...filho.attributes].forEach(a => filho.removeAttribute(a.name));
-    }
-  })(caixa);
-  return caixa.innerHTML;
-}
-
-const vencida = v => v.prazo_acao && v.prazo_acao < hoje && (v.acao || "").trim();
+const br = d => d ? d.split("-").reverse().join("/") : "";
+const ha = n => String(n).replace(".", ",") + " ha";
 
 function desenha() {
-  const lista = filtradas();
+  const nome = consultorDaVez;
+  $("titulo").textContent = eu.admin ? "Produtores de " + nome : "Meus produtores";
 
-  $("n-visitas").textContent    = lista.length;
-  $("n-produtores").textContent = new Set(lista.map(v => v.produtor)).size;
-  $("n-vencidas").textContent   = lista.filter(vencida).length;
-  $("n-fotos").textContent      = lista.reduce((s, v) => s + (v.fotos || []).length, 0);
-
-  $("contagem").textContent = lista.length === visitas.length
-    ? `${visitas.length} ${visitas.length === 1 ? "visita" : "visitas"}`
-    : `${lista.length} de ${visitas.length}`;
-
-  if (!lista.length) {
-    $("lista").innerHTML = `<div class="vazio">${
-      visitas.length ? "Nenhuma visita com esses filtros."
-                     : "Nenhuma visita registrada ainda."}</div>`;
+  if (!produtoresDaVez.length) {
+    $("contagem").textContent = "";
+    $("lista").innerHTML = `<div class="vazio">Nenhum produtor na carteira de
+      ${escapa(nome)}. Se o nome do seu login difere do da carteira, peça ao
+      administrador para conferir.</div>`;
     return;
   }
 
-  $("lista").innerHTML = lista.map(cartao).join("");
+  const comRegistro = produtoresDaVez.filter(l => atual[chave(l[0], l[1])]).length;
+  $("contagem").textContent =
+    `${produtoresDaVez.length} ${produtoresDaVez.length === 1 ? "produtor" : "produtores"}` +
+    ` · ${comRegistro} com situação salva aqui`;
+
+  $("lista").innerHTML = produtoresDaVez.map((l, i) => cartao(l, i)).join("");
 }
 
-function cartao(v) {
-  const extras   = v.extras || {};
-  const situacao = extras.situacao || {};
-  const marcados = Object.entries(situacao)
-    .filter(([, sim]) => sim)
-    .map(([id]) => `<span>${escapa(ROTULOS[id] || id)}</span>`).join("");
+/* O que vale para o cartão: o salvo aqui; sem ele, o da última visita. */
+function estadoDe(l) {
+  const k = chave(l[0], l[1]);
+  if (atual[k]) return { ...atual[k], fonte: "aqui" };
+  if (daVisita[k]) return { ...daVisita[k], fonte: "visita" };
+  return { situacao: {}, area_manejo_ha: null, area_experimental_ha: null, fonte: "nada" };
+}
 
-  const fotos = (v.fotos || []).map(u =>
-    `<a href="${escapa(u)}" target="_blank" rel="noopener">
-       <img src="${escapa(u)}" alt="Foto da visita" loading="lazy"></a>`).join("");
+function resumo(e) {
+  const marcados = ITENS.filter(([id]) => e.situacao && e.situacao[id]).length;
+  const etiquetas = [`<span class="etiqueta">${marcados} de ${ITENS.length} itens</span>`];
+  if (e.area_manejo_ha != null)
+    etiquetas.push(`<span class="etiqueta">manejo ${ha(e.area_manejo_ha)}</span>`);
+  if (e.area_experimental_ha != null)
+    etiquetas.push(`<span class="etiqueta">experimental ${ha(e.area_experimental_ha)}</span>`);
+  if (e.fonte === "nada")   etiquetas.push(`<span class="etiqueta falta">sem situação</span>`);
+  if (e.fonte === "visita") etiquetas.push(`<span class="etiqueta falta">da visita — falta salvar</span>`);
+  return etiquetas.join("");
+}
 
-  const areas = [
-    extras.talhao ? `<dt>Talhão / referência</dt><dd>${escapa(extras.talhao)}</dd>` : "",
-    extras.relator ? `<dt>Relatório feito por</dt><dd>${escapa(extras.relator)}</dd>` : "",
-    extras.area_manejo_ha      != null ? `<dt>Área de manejo</dt><dd>${extras.area_manejo_ha} ha</dd>` : "",
-    extras.area_experimental_ha != null ? `<dt>Área experimental</dt><dd>${extras.area_experimental_ha} ha</dd>` : ""
-  ].join("");
+function rodape(e) {
+  if (e.fonte === "aqui")
+    return "Atualizado em " + new Date(e.alterado_em).toLocaleString("pt-BR",
+      { dateStyle: "short", timeStyle: "short" });
+  if (e.fonte === "visita")
+    return "Preenchido com a visita de " + br(e.data_visita) +
+           ". Confira e salve para valer como situação atual.";
+  return "Nada marcado ainda.";
+}
+
+function cartao(l, i) {
+  const e = estadoDe(l);
+  const caixas = ITENS.map(([id, rotulo, nota]) => `
+    <label class="opt">
+      <input type="checkbox" name="${id}"${e.situacao && e.situacao[id] ? " checked" : ""}>
+      <span class="marca">
+        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2.5 7.4l3 3L11.5 4" stroke="#fff" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>${escapa(rotulo)}${nota ? `<small>${escapa(nota)}</small>` : ""}</span>
+    </label>`).join("");
+
+  const valor = n => n == null ? "" : n;
 
   return `
-<details class="visita">
+<details class="produtor" data-i="${i}">
   <summary>
-    <span class="quando">${br(v.data_visita)}</span>
-    <span class="quem">${escapa(v.produtor)}</span>
-    <span class="por">${escapa(v.consultor)}${v.municipio ? " · " + escapa(v.municipio) : ""}</span>
-    ${vencida(v) ? '<span class="etiqueta vencida">ação vencida</span>' : ""}
-    ${(v.fotos || []).length ? `<span class="etiqueta">${v.fotos.length} foto${v.fotos.length > 1 ? "s" : ""}</span>` : ""}
-    <span class="etiqueta">${escapa(ORIGENS[v.origem] || v.origem)}</span>
+    <span class="nome">${escapa(l[1])}</span>
+    <span class="onde">${escapa(l[2])}</span>
+    <span class="etiquetas">${resumo(e)}</span>
   </summary>
-  <div class="corpo">
-    <h3>Descrição</h3>
-    <div class="texto">${limpaHtml(v.descricao_html) ||
-       escapa(v.descricao).replace(/\n/g, "<br>") || "<i>sem descrição</i>"}</div>
+  <form class="corpo" novalidate>
+    <h3>Situação do produtor</h3>
+    <p class="dica">Marque o que já vale hoje.</p>
+    <div class="lista">${caixas}</div>
 
-    ${(v.acao || "").trim() ? `
-      <h3>Ação combinada</h3>
-      <div class="texto">${escapa(v.acao).replace(/\n/g, "<br>")}
-        ${v.prazo_acao ? `<br><b>Prazo:</b> ${br(v.prazo_acao)}${vencida(v) ? " (vencido)" : ""}` : ""}
-      </div>` : ""}
-
-    ${marcados ? `<h3>Situação na visita</h3><div class="marcados">${marcados}</div>` : ""}
-
-    ${fotos ? `<h3>Fotos</h3><div class="fotos">${fotos}</div>` : ""}
-
-    <h3>Registro</h3>
-    <dl class="dados">
-      ${areas}
-      <dt>Enviado em</dt>
-      <dd>${new Date(v.registrado_em).toLocaleString("pt-BR")}</dd>
-    </dl>
+    <h3>Área Syngenta</h3>
+    <div class="duplo">
+      <div class="medida">
+        <label for="manejo-${i}">Manejo 100%</label>
+        <input type="number" id="manejo-${i}" name="area_manejo" inputmode="decimal"
+               min="0" step="0.1" placeholder="0" value="${valor(e.area_manejo_ha)}">
+        <i>ha</i>
+      </div>
+      <div class="medida">
+        <label for="exp-${i}">Experimental</label>
+        <input type="number" id="exp-${i}" name="area_exp" inputmode="decimal"
+               min="0" step="0.1" placeholder="0" value="${valor(e.area_experimental_ha)}">
+        <i>ha</i>
+      </div>
+    </div>
+    <p class="dica">Deixe vazio se não se aplica. Zero e vazio são coisas diferentes no relatório.</p>
 
     <div class="pe">
-      <button type="button" class="leve pdf" data-id="${escapa(v.id)}">Baixar PDF</button>
-      <span class="aviso-pdf"></span>
+      <button type="submit">Salvar</button>
+      <span class="estado" role="status" aria-live="polite">${escapa(rodape(e))}</span>
     </div>
-  </div>
+  </form>
 </details>`;
 }
 
 /* ===================================================================
-   6. O MESMO PDF QUE SAI NO CELULAR
-
-   O desenho do relatório está em /relatorio.js, carregado aqui e no
-   formulário — é literalmente a mesma função, então o PDF sai idêntico.
-
-   O que muda é a forma das fotos: no celular elas estão embutidas como
-   dados; aqui vêm como endereço no Storage, e o jsPDF precisa dos dados
-   para desenhar. Então cada foto é buscada e convertida antes.
+   5. GRAVAÇÃO
+   Cada "Salvar" é uma linha nova: a tabela guarda o histórico e a
+   página mostra a mais recente. Nada é sobrescrito.
    =================================================================== */
-function fotoParaDados(url) {
-  return fetch(url)
-    .then(r => { if (!r.ok) throw new Error("foto " + r.status); return r.blob(); })
-    .then(blob => new Promise((ok, falha) => {
-      const leitor = new FileReader();
-      leitor.onload = () => ok(leitor.result);
-      leitor.onerror = falha;
-      leitor.readAsDataURL(blob);
-    }));
+const algumSujo = () => !!document.querySelector(".produtor[data-sujo]");
+
+function marcaSujo(cartao, sujo) {
+  cartao.toggleAttribute("data-sujo", sujo);
+  const etiquetas = cartao.querySelector(".etiquetas");
+  const aviso = etiquetas.querySelector(".sujo");
+  if (sujo && !aviso) etiquetas.insertAdjacentHTML("beforeend",
+    '<span class="etiqueta sujo">não salvo</span>');
+  if (!sujo && aviso) aviso.remove();
 }
 
-/* A linha do banco no formato que gerarPdf() espera. */
-async function paraRelatorio(v) {
-  const extras = v.extras || {};
-  const fotos = [];
-  let perdidas = 0;
-  for (const url of v.fotos || []) {
-    try { fotos.push({ dados: await fotoParaDados(url) }); }
-    catch (e) { perdidas++; console.warn("foto nao veio:", url, e.message); }
+$("lista").addEventListener("input", e => {
+  const c = e.target.closest(".produtor");
+  if (!c) return;
+  marcaSujo(c, true);
+  const estado = c.querySelector(".estado");
+  estado.className = "estado";
+  estado.textContent = "Alterações não salvas.";
+});
+
+$("lista").addEventListener("submit", async e => {
+  e.preventDefault();
+  const form = e.target;
+  const c = form.closest(".produtor");
+  const l = produtoresDaVez[+c.dataset.i];
+  const botao = form.querySelector("button[type=submit]");
+  const estado = form.querySelector(".estado");
+
+  const num = campo => {
+    const t = form.elements[campo].value.trim().replace(",", ".");
+    return t === "" ? null : Number(t);
+  };
+  const manejo = num("area_manejo"), exp = num("area_exp");
+  /* Campo numérico com texto inválido chega vazio em alguns navegadores;
+     validity.badInput separa "deixou vazio" de "digitou errado". */
+  if ([manejo, exp].some(n => n != null && (!isFinite(n) || n < 0)) ||
+      form.elements.area_manejo.validity.badInput ||
+      form.elements.area_exp.validity.badInput) {
+    estado.className = "estado falhou";
+    estado.textContent = "Área em hectares precisa ser um número maior ou igual a zero.";
+    return;
   }
-  return [{
-    consultor: v.consultor,
-    produtor: v.produtor,
-    municipio: v.municipio || "",
-    data_visita: v.data_visita,
-    talhao: extras.talhao || "",
-    relator: extras.relator || "",
-    descricao: v.descricao || "",
-    descricao_html: v.descricao_html || "",
-    acao: v.acao || "",
-    prazo_acao: v.prazo_acao || "",
-    /* Situação e área só nas visitas antigas, que ainda as traziam.
-       As novas não têm — moram em situacao_produtor — e o PDF pula a
-       seção quando o campo não vem, em vez de imprimir tudo vazio. */
-    ...(extras.situacao ? { situacao: extras.situacao } : {}),
-    ...("area_manejo_ha" in extras || "area_experimental_ha" in extras ? {
-      area_manejo_ha: extras.area_manejo_ha == null ? null : extras.area_manejo_ha,
-      area_experimental_ha: extras.area_experimental_ha == null ? null : extras.area_experimental_ha
-    } : {}),
-    fotos
-  }, perdidas];
-}
 
-$("lista").addEventListener("click", async e => {
-  const botao = e.target.closest("button.pdf");
-  if (!botao) return;
-
-  const visita = visitas.find(v => v.id === botao.dataset.id);
-  const aviso = botao.parentElement.querySelector(".aviso-pdf");
-  if (!visita) return;
+  const linha = {
+    consultor: l[0],
+    produtor: l[1],
+    situacao: Object.fromEntries(ITENS.map(([id]) => [id, form.elements[id].checked])),
+    area_manejo_ha: manejo,
+    area_experimental_ha: exp
+  };
 
   botao.disabled = true;
-  botao.textContent = "Gerando…";
-  aviso.textContent = "";
+  botao.textContent = "Salvando…";
   try {
-    const [registro, perdidas] = await paraRelatorio(visita);
-    if (!baixaPdf(registro)) throw new Error("o PDF não pôde ser montado neste navegador");
-    if (perdidas) {
-      aviso.textContent = perdidas === 1
-        ? "1 foto não pôde ser carregada e ficou de fora"
-        : perdidas + " fotos não puderam ser carregadas e ficaram de fora";
-    }
+    const ok = await pede(`/rest/v1/${SUPABASE.tabela}`, linha);
+    if (ok === null) return;                /* caiu no login */
+    atual[chave(l[0], l[1])] = { ...linha, alterado_em: new Date().toISOString() };
+
+    const e2 = estadoDe(l);
+    marcaSujo(c, false);
+    c.querySelector(".etiquetas").innerHTML = resumo(e2);
+    estado.className = "estado ok";
+    estado.textContent = "Salvo. " + rodape(e2) + ".";
+    const comRegistro = produtoresDaVez.filter(x => atual[chave(x[0], x[1])]).length;
+    $("contagem").textContent =
+      `${produtoresDaVez.length} ${produtoresDaVez.length === 1 ? "produtor" : "produtores"}` +
+      ` · ${comRegistro} com situação salva aqui`;
   } catch (err) {
     console.error(err);
-    aviso.textContent = "Não deu para gerar: " + err.message;
+    estado.className = "estado falhou";
+    /* 403 aqui é a regra do banco: o nome do login não é o deste
+       consultor, ou a tabela ainda não foi criada com a regra nova. */
+    estado.textContent = /\b403\b|42501/.test(err.message)
+      ? "O banco não deixou salvar: este produtor não é da sua carteira."
+      : "Não foi possível salvar. " + err.message;
   } finally {
     botao.disabled = false;
-    botao.textContent = "Baixar PDF";
+    botao.textContent = "Salvar";
   }
 });
 
 /* ===================================================================
-   7. EXPORTAR
-   Ponto-e-vírgula e BOM porque é o que o Excel em português entende
-   sem perguntar nada.
-   =================================================================== */
-function csv() {
-  const lista = filtradas();
-  const colunas = [
-    ["data_visita",  v => br(v.data_visita)],
-    ["consultor",    v => v.consultor],
-    ["produtor",     v => v.produtor],
-    ["municipio",    v => v.municipio],
-    ["talhao",       v => ((v.extras || {}).talhao) || ""],
-    ["relator",      v => ((v.extras || {}).relator) || ""],
-    ["formulario",   v => ORIGENS[v.origem] || v.origem],
-    ["area_manejo_ha",       v => (v.extras || {}).area_manejo_ha],
-    ["area_experimental_ha", v => (v.extras || {}).area_experimental_ha],
-    ...ITENS.map(([id, rotulo]) =>
-      [rotulo, v => ((v.extras || {}).situacao || {})[id] ? "sim" : "nao"]),
-    ["acao",        v => v.acao],
-    ["prazo_acao",  v => br(v.prazo_acao)],
-    ["fotos",       v => (v.fotos || []).length],
-    ["descricao",   v => v.descricao],
-    ["enviado_em",  v => new Date(v.registrado_em).toLocaleString("pt-BR")]
-  ];
-
-  const celula = valor => {
-    const t = valor == null ? "" : String(valor);
-    return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
-  };
-
-  const linhas = [colunas.map(c => c[0]).join(";")];
-  lista.forEach(v => linhas.push(colunas.map(c => celula(c[1](v))).join(";")));
-
-  const blob = new Blob(["﻿" + linhas.join("\r\n")],
-                        { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = Object.assign(document.createElement("a"),
-    { href: url, download: `visitas_${hoje}.csv` });
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-}
-
-/* ===================================================================
-   8. LIGAÇÕES
+   6. LIGAÇÕES
    =================================================================== */
 $("form-login").addEventListener("submit", async e => {
   e.preventDefault();
@@ -688,7 +642,7 @@ $("form-login").addEventListener("submit", async e => {
   try {
     await entra($("email").value.trim(), $("senha").value);
     $("senha").value = "";
-    await mostraPainel();
+    await mostraPagina();
   } catch (err) {
     $("erro-login").textContent = err.message;
     $("erro-login").hidden = false;
@@ -698,21 +652,25 @@ $("form-login").addEventListener("submit", async e => {
   }
 });
 
-["f-busca","f-consultor","f-produtor","f-municipio","f-origem","f-de","f-ate"]
-  .forEach(id => $(id).addEventListener("input", desenha));
-
-$("btn-limpar").addEventListener("click", () => {
-  ["f-busca","f-consultor","f-produtor","f-municipio","f-origem","f-de","f-ate"]
-    .forEach(id => $(id).value = "");
-  desenha();
+$("consultores").addEventListener("click", e => {
+  const b = e.target.closest(".consultor");
+  if (b && b.dataset.nome !== consultorDaVez) escolhe(b.dataset.nome);
 });
 
-$("btn-csv").addEventListener("click", csv);
-$("btn-sair").addEventListener("click", sai);
+$("btn-sair").addEventListener("click", () => {
+  if (algumSujo() && !confirm("Há alterações não salvas. Sair mesmo assim?")) return;
+  sai();
+});
+
+/* Fechar a aba com um cartão marcado e não salvo perde o que foi feito
+   no campo — o navegador pergunta antes. */
+window.addEventListener("beforeunload", e => {
+  if (algumSujo()) { e.preventDefault(); e.returnValue = ""; }
+});
 
 /* --- começo --- */
 sessao = recupera();
-if (sessao && sessao.access_token) mostraPainel();
+if (sessao && sessao.access_token) mostraPagina();
 else mostraLogin();
 </script>
 </body>

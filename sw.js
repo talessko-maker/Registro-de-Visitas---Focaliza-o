@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v4";
+const VERSAO = "v5";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 
@@ -14,6 +14,7 @@ const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 const ESSENCIAIS = [
   "/",
   "/index.html",
+  "/carteira.js",
   "/vendor-jspdf.js",
   "/relatorio.js",
   "/manifest.json",
@@ -79,9 +80,10 @@ self.addEventListener("fetch", e => {
   /* A página em si: tenta a rede primeiro, para que um deploy novo
      apareça assim que houver sinal. Sem sinal, cai no cache.
 
-     Só o formulário é guardado. O painel do admin precisa de rede para
-     ler o banco, e guardá-lo aqui sobrescreveria o formulário — o
-     aparelho abriria o painel no lugar dele quando ficasse sem sinal. */
+     Só o formulário é guardado. O painel e a página dos produtores
+     precisam de rede para ler o banco, e guardá-los aqui sobrescreveria
+     o formulário — o aparelho abriria um deles no lugar dele quando
+     ficasse sem sinal. */
   if (req.mode === "navigate") {
     const ehFormulario = url.pathname === "/" || url.pathname === "/index.html";
     e.respondWith(
@@ -104,7 +106,7 @@ self.addEventListener("fetch", e => {
             (ehFormulario
               ? "Sem conexão e a página ainda não foi guardada neste aparelho. " +
                 "Abra o site uma vez com internet."
-              : "O painel precisa de internet para ler os registros.") +
+              : "Esta página precisa de internet para ler os registros.") +
             "</p>",
             { headers: { "Content-Type": "text/html; charset=utf-8" } }
           );

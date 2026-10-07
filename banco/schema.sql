@@ -195,6 +195,56 @@ create policy "cada um le o seu" on public.visitas
 -- É o padrão certo: quem manda liberar é você, não o cadastro.
 -- ===================================================================
 
+
+-- ===================================================================
+-- 2.3 SITUAÇÃO E ÁREA DE CADA PRODUTOR
+--
+-- Saíram do formulário de visita: são do produtor, não da visita, e
+-- se marcam na página produtores.html. Antes cada visita trazia um
+-- retrato completo e o estado era "o da última visita"; agora o
+-- estado se edita direto, e cada gravação é uma linha nova.
+--
+-- Só insere, nunca altera. É o histórico de graça — quem marcou o
+-- quê e quando — e mantém a regra simples: sem update e sem delete,
+-- não há linha alheia para estragar. O estado de hoje é a linha mais
+-- recente de cada par consultor + produtor (visão no item 4.5).
+--
+-- Grava e lê só quem entrou com conta: a chave do site, que está no
+-- HTML, não toca nesta tabela. Cada consultor só grava e lê com o
+-- próprio nome; o admin, tudo. O alterado_por sai do token, não do
+-- que a tela manda, então não dá para gravar em nome de outra conta.
+-- ===================================================================
+create table if not exists public.situacao_produtor (
+  id                    uuid primary key default gen_random_uuid(),
+  consultor             text        not null,   -- igual a visitas.consultor
+  produtor              text        not null,   -- igual a visitas.produtor
+  situacao              jsonb       not null default '{}',  -- ids do ITENS, em carteira.js
+  area_manejo_ha        numeric     check (area_manejo_ha >= 0),
+  area_experimental_ha  numeric     check (area_experimental_ha >= 0),
+  -- set null: apagar a conta de alguém não apaga a situação que ele marcou
+  alterado_por          uuid        default auth.uid()
+                                    references auth.users(id) on delete set null,
+  alterado_em           timestamptz not null default now()
+);
+
+create index if not exists situacao_produtor_idx
+  on public.situacao_produtor (consultor, produtor, alterado_em desc);
+
+alter table public.situacao_produtor enable row level security;
+
+grant select, insert on public.situacao_produtor to authenticated;
+
+drop policy if exists "consultor grava o seu" on public.situacao_produtor;
+create policy "consultor grava o seu" on public.situacao_produtor
+  for insert to authenticated
+  with check (alterado_por = auth.uid()
+              and (public.sou_admin() or consultor = public.meu_nome()));
+
+drop policy if exists "consultor le o seu" on public.situacao_produtor;
+create policy "consultor le o seu" on public.situacao_produtor
+  for select to authenticated
+  using (public.sou_admin() or consultor = public.meu_nome());
+
 -- ===================================================================
 -- 3. AS FOTOS
 -- Bucket público porque o PDF e o painel montam a URL direta. O caminho
@@ -252,7 +302,9 @@ from public.visitas v
 order by v.data_visita desc, v.registrado_em desc;
 
 
--- 4.2 Situação de cada produtor HOJE.
+-- 4.2 Situação de cada produtor pela ÚLTIMA VISITA — o desenho antigo.
+--     As visitas novas não trazem mais situação (item 2.3); esta visão
+--     fica para consultar o histórico. O estado de hoje está na 4.5.
 --     O checklist é retrato daquela visita, não estado acumulado:
 --     "já tem AP" marcado em março e desmarcado em maio não é erro, é
 --     o que o consultor viu em cada dia. Por isso pergunta de estado se
@@ -311,11 +363,35 @@ group by 1, 2, 3
 order by 1 desc, 4 desc;
 
 
+-- 4.5 Situação e área de cada produtor HOJE: a linha mais recente de
+--     cada par consultor + produtor, aberta em colunas para o Excel.
+--     A página produtores.html calcula o mesmo a partir da tabela.
+create or replace view public.produtores_hoje
+with (security_invoker = on) as
+select distinct on (s.consultor, s.produtor)
+  s.consultor,
+  s.produtor,
+  s.area_manejo_ha,
+  s.area_experimental_ha,
+  (s.situacao->>'consultoria_contratada')::boolean   as consultoria_contratada,
+  (s.situacao->>'visita_yuri')::boolean              as visita_yuri,
+  (s.situacao->>'visita_guilherme')::boolean         as visita_guilherme,
+  (s.situacao->>'ja_tem_ap')::boolean                as ja_tem_ap,
+  (s.situacao->>'ja_tinha_analise_solo')::boolean    as ja_tinha_analise_solo,
+  (s.situacao->>'regulagem_pulverizador')::boolean   as regulagem_pulverizador,
+  (s.situacao->>'coleta_analise_solo')::boolean      as coleta_analise_solo,
+  (s.situacao->>'coleta_analise_nematoide')::boolean as coleta_analise_nematoide,
+  s.alterado_em
+from public.situacao_produtor s
+order by s.consultor, s.produtor, s.alterado_em desc;
+
+
 -- As visões só podem ser lidas por quem entrou com conta — elas herdam
 -- a regra da tabela por causa do security_invoker. Este grant vem aqui
 -- no fim porque as visões precisam existir antes.
 grant select on public.visitas_planilha, public.situacao_atual,
-                public.acoes_pendentes, public.visitas_por_mes
+                public.acoes_pendentes, public.visitas_por_mes,
+                public.produtores_hoje
   to authenticated;
 
 
@@ -342,6 +418,7 @@ where consultor in ('TESTE', 'TESTE - APAGAR', 'x')
 -- ===================================================================
 select json_build_object(
   'linhas_na_tabela', (select count(*) from public.visitas),
+  'linhas_de_situacao', (select count(*) from public.situacao_produtor),
 
   'rls_ligada', (select relrowsecurity
                  from pg_class where oid = 'public.visitas'::regclass),

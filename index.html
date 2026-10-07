@@ -76,6 +76,7 @@ header h1{
   white-space:nowrap;
 }
 .entrar:hover{background:rgba(255,255,255,.24)}
+.menu{display:flex;gap:8px;flex-wrap:wrap}
 .entrar svg{flex:none}
 header p{
   margin:4px 0 0;
@@ -160,64 +161,16 @@ textarea{min-height:92px;resize:vertical;line-height:1.45}
 .editor ul,.editor ol{margin:4px 0;padding-left:22px}
 .editor b,.editor strong{font-weight:600}
 select:focus-visible,input:focus-visible,textarea:focus-visible,
-button:focus-visible,.opt:focus-visible{
+button:focus-visible{
   outline:2.5px solid var(--apoio);
   outline-offset:2px;
 }
 select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
 .dica{margin:6px 0 0;font-size:12.5px;color:var(--tinta-fraca)}
 
-/* ---------- área em hectares ---------- */
-.duplo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.medida{position:relative}
-.medida input{padding-right:42px}
-.medida i{
-  position:absolute;
-  right:14px;
-  top:50%;
-  transform:translateY(-50%);
-  font-style:normal;
-  font-size:13.5px;
-  color:var(--tinta-fraca);
-  pointer-events:none;
-}
-
-/* ---------- checklist ---------- */
-.lista{display:flex;flex-direction:column;gap:8px}
-.opt{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-height:52px;
-  padding:8px 14px;
-  background:#fff;
-  border:1.5px solid var(--linha);
-  border-radius:var(--raio);
-  cursor:pointer;
-  user-select:none;
-}
-.opt input{position:absolute;opacity:0;width:0;height:0}
-.marca{
-  flex:0 0 auto;
-  width:22px;height:22px;
-  border:2px solid var(--linha);
-  border-radius:5px;
-  background:#fff;
-  display:grid;
-  place-items:center;
-}
-.marca svg{width:14px;height:14px;opacity:0}
-.opt span{font-size:14.5px;line-height:1.35}
-.opt small{display:block;font-size:12px;color:var(--tinta-fraca)}
-.opt:has(input:checked){
-  border-color:var(--apoio);
-  background:var(--marcado);
-}
-.opt:has(input:checked) .marca{
-  background:var(--apoio);
-  border-color:var(--apoio);
-}
-.opt:has(input:checked) .marca svg{opacity:1}
+/* aviso de onde foram parar a situação e a área */
+.rumo{margin:-8px 0 18px}
+.rumo a{color:var(--principal);font-weight:500}
 
 /* ---------- fotos ---------- */
 .foto-acoes{display:flex;gap:10px}
@@ -392,16 +345,26 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
       </div>
       <h1>Registro de visita</h1>
     </div>
-    <a class="entrar" href="/painel.html">
-      <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path d="M11 2.5h3A1.5 1.5 0 0115.5 4v10a1.5 1.5 0 01-1.5 1.5h-3"
-              stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M7.5 12.5L11 9 7.5 5.5M11 9H2.5"
-              stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Painel
-    </a>
+    <nav class="menu" aria-label="Outras páginas">
+      <a class="entrar" href="/produtores.html">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <circle cx="9" cy="6" r="2.8" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M3.5 15.5c.6-2.9 2.8-4.6 5.5-4.6s4.9 1.7 5.5 4.6"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Produtores
+      </a>
+      <a class="entrar" href="/painel.html">
+        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path d="M11 2.5h3A1.5 1.5 0 0115.5 4v10a1.5 1.5 0 01-1.5 1.5h-3"
+                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M7.5 12.5L11 9 7.5 5.5M11 9H2.5"
+                stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Painel
+      </a>
+    </nav>
   </div>
 </header>
 
@@ -521,32 +484,8 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>
-        Situação do produtor
-        <span>Marque o que já vale hoje. Vale a situação do registro mais recente.</span>
-      </legend>
-      <div class="lista" id="checklist"></div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Área Syngenta</legend>
-      <div class="duplo">
-        <div class="campo medida">
-          <label for="area_manejo">Manejo 100%</label>
-          <input type="number" id="area_manejo" name="area_manejo"
-                 inputmode="decimal" min="0" step="0.1" placeholder="0">
-          <i>ha</i>
-        </div>
-        <div class="campo medida">
-          <label for="area_exp">Experimental</label>
-          <input type="number" id="area_exp" name="area_exp"
-                 inputmode="decimal" min="0" step="0.1" placeholder="0">
-          <i>ha</i>
-        </div>
-      </div>
-      <p class="dica">Deixe vazio se não se aplica. Zero e vazio são coisas diferentes no relatório.</p>
-    </fieldset>
+    <p class="dica rumo">A situação do produtor e a área Syngenta ficam agora em
+      <a href="/produtores.html">Produtores focalizados</a>, uma vez por produtor.</p>
 
     <button type="submit" class="enviar" id="btn-enviar">Salvar registro</button>
   </form>
@@ -568,8 +507,10 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
   </section>
 </main>
 
-<!-- jsPDF 4.2.1 (MIT) e o desenho do relatório. Em arquivos separados
-     porque o painel do admin gera o mesmo PDF. -->
+<!-- A carteira, o jsPDF 4.2.1 (MIT) e o desenho do relatório. Em
+     arquivos separados porque o painel e a página dos produtores usam
+     os mesmos. -->
+<script src="/carteira.js"></script>
 <script src="/vendor-jspdf.js"></script>
 <script src="/relatorio.js"></script>
 
@@ -590,66 +531,10 @@ const SUPABASE = {
 };
 
 /* ===================================================================
-   2. CARTEIRA
-   Uma linha por produtor. Para incluir ou remover alguém, edite aqui
-   e nada mais precisa mudar.
-   =================================================================== */
-const CARTEIRA = [
-  ["Alex","JORGE DALMOLIN","Mafra"],
-  ["Alex","MARCOS ECKEL","Mafra"],
-  ["Alex","ANTONIO CIDRAL DA COSTA","Mafra"],
-  ["Daniel Bojarski","VALDECIR SLABISKI","Itaiópolis"],
-  ["Daniel Bojarski","RAFAEL CELSO SOZO","Itaiópolis"],
-  ["Daniel Bojarski","ACACIO GABRIEL KACHEL","Itaiópolis"],
-  ["Daniel Prestes","EUCLIDES ZIEMANN","Irineópolis"],
-  ["Daniel Prestes","THIAGO FELIPE SHAFASCHECK","Irineópolis"],
-  ["Daniel Prestes","TURKOT","Irineópolis"],
-  ["Gerson","ROMALDO CISLINSKI","Itaiópolis"],
-  ["Gerson","CARLOS WAGNER","Itaiópolis"],
-  ["Gerson","ALISSON KARACHINSKI","Itaiópolis"],
-  ["Gilson","ANILDO DAL PIZZOL","Canoinhas"],
-  ["Gilson","MAURO SFAIR","Irineópolis"],
-  ["Gilson","FERNANDO/CLEONE GIURIATTI","Canoinhas"],
-  ["Grexe","MARCELO RIBAS","Papanduva"],
-  ["Grexe","DECIO E SERGIO AMORIM","Papanduva"],
-  ["Grexe","DOUGLAS PSCHEIDT","Papanduva"],
-  ["Grexe","JOSUI DE ALMEIDA CEZAR","Papanduva"],
-  ["Grexe","WALTER SLABISKI","Papanduva"],
-  ["Grexe","LAURECI POMA","Papanduva"],
-  ["Gustavo","BRUNO KENZO IGARASHI AZUMA","Papanduva"],
-  ["Gustavo","PEDRO GERALDO CIUPKA","Papanduva"],
-  ["Jalmir","CÉSAR DANIEL SCHAPIEVSKI/DANIELLE DE LOURDES SCHAPIEVSKI","Major Vieira"],
-  ["Jalmir","LOURIVAL RUTHES","Major Vieira"],
-  ["Jalmir","MATHEUS ZIMMER SCHUPEL","Major Vieira"],
-  ["Marcelo","ISMAEL SOPCZAK","Major Vieira"],
-  ["Marcelo","IRINEU/IGOR/YURI RUTHES","Major Vieira"],
-  ["Marcelo","MARCIO LISCZKOVSKI","Monte Castelo"],
-  ["Marcelo","HELENICE DE SOUZA","Monte Castelo"],
-  ["Marcelo","CARLOS AUGUSTO PAPES","Major Vieira"],
-  ["Marcelo","REINALDO DUFFECK","Monte Castelo"],
-  ["Marcos","AMARILDO HERBST","Papanduva"],
-  ["Marcos","JOSÉ MÁRIO GRUBER/LUIS CARLOS GRUBER","Papanduva"],
-  ["Marcos","SAUL SCHAFACHEK","Papanduva"],
-  ["Marcos","WALMIR HUZIOKA","Papanduva"],
-  ["Marçal","FABIO/FERNANDO GLONEK","Papanduva"],
-  ["Marçal","JONER ANDRESON ADAMCZEVSKI","Papanduva"],
-  ["Marçal","SCHADECK AGROPECUARIA S/A","Papanduva"],
-  ["Marçal","JOAO JAIME IANSKOSKI","Papanduva"],
-  ["Marçal","PEDRO GIACOMO DE LUCA","Papanduva"],
-  ["Shander","MARCELO ENGEL","Canoinhas"],
-  ["Shander","RAUL OLESCOWICZ","Canoinhas"],
-  ["Shander","MARCIO PAUL","Canoinhas"]
-];
-
-/* Quem digitou o relatório, quando não foi o próprio consultor da
-   visita. Para incluir ou tirar alguém, edite só esta linha. */
-const RELATORES = ["Yuri", "Guilherme"];
-
-/* ===================================================================
-   3. CHECKLIST DE SITUAÇÃO
-   Mudou de lugar: está em /relatorio.js, que o formulário e o painel
-   carregam. Fica lá porque o relatório em PDF também precisa dos
-   rótulos, e assim incluir um item novo se faz num arquivo só.
+   2. CARTEIRA, RELATORES E CHECKLIST
+   Moram em /carteira.js, carregado acima: o painel e a página dos
+   produtores focalizados usam a mesma lista, e assim incluir alguém
+   se faz num arquivo só.
    =================================================================== */
 
 /* =================================================================== */
@@ -771,19 +656,6 @@ hoje.setMinutes(hoje.getMinutes() - hoje.getTimezoneOffset());
 $("data").value = hoje.toISOString().slice(0, 10);
 $("data").max   = hoje.toISOString().slice(0, 10);
 
-/* --- checklist --- */
-$("checklist").innerHTML = ITENS.map(([id, rotulo, nota]) => `
-  <label class="opt">
-    <input type="checkbox" name="${id}">
-    <span class="marca">
-      <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M2.5 7.4l3 3L11.5 4" stroke="#fff" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </span>
-    <span>${rotulo}${nota ? `<small>${nota}</small>` : ""}</span>
-  </label>`).join("");
-
 /* --- fotos com redução no cliente --- */
 const MAX_FOTOS = 10;
 
@@ -866,9 +738,10 @@ form.addEventListener("submit", async e => {
   if (!$("data").value)    return mostraErro("Informe a data da visita.");
   if (!editor.textContent.trim()) return mostraErro("Escreva a descrição da visita.");
 
-  const num = v => v.trim() === "" ? null : Number(v.replace(",", "."));
+  /* versao 3: sem situação e sem área — elas passaram a ser do
+     produtor, na página dos produtores focalizados. */
   const registro = {
-    versao: 2,
+    versao: 3,
     id: (crypto.randomUUID ? crypto.randomUUID()
          : String(Date.now()) + "-" + Math.random().toString(16).slice(2)),
     enviado_em: new Date().toISOString(),
@@ -882,10 +755,6 @@ form.addEventListener("submit", async e => {
     descricao_html: limpaHtml(editor),
     acao: $("acao").value.trim(),
     prazo_acao: $("prazo").value || "",
-    area_manejo_ha: num($("area_manejo").value),
-    area_experimental_ha: num($("area_exp").value),
-    situacao: Object.fromEntries(
-      ITENS.map(([id]) => [id, form.elements[id].checked])),
     fotos
   };
 
@@ -1069,12 +938,15 @@ async function enviaRegistro(reg) {
     acao: reg.acao,
     prazo_acao: reg.prazo_acao || null,
     fotos: enderecos,
-    /* O talhão entra no extras junto do checklist e das áreas: é jsonb,
-       então cabe sem coluna nova e sem mexer na regra de acesso. */
+    /* O talhão e o relator entram no extras: é jsonb, então cabe sem
+       coluna nova e sem mexer na regra de acesso. Registros antigos da
+       fila (versao 2) ainda trazem situação e área — vão junto, para
+       não se perderem. */
     extras: {
-      situacao: reg.situacao,
-      area_manejo_ha: reg.area_manejo_ha,
-      area_experimental_ha: reg.area_experimental_ha,
+      ...(reg.situacao ? { situacao: reg.situacao } : {}),
+      ...(reg.area_manejo_ha !== undefined ? {
+        area_manejo_ha: reg.area_manejo_ha,
+        area_experimental_ha: reg.area_experimental_ha } : {}),
       talhao: reg.talhao || null,
       relator: reg.relator || null
     },
