@@ -351,12 +351,25 @@ async function mostraPagina() {
       return;
     }
 
+    /* Cada leitura falha sozinha: sem a tabela nova (schema.sql não
+       rodado) ou sem as visitas, a página ainda monta os cartões com o
+       que veio e diz o que faltou, em vez de ficar em branco. */
     const [linhas, visitas] = await Promise.all([
       pede(`/rest/v1/${SUPABASE.tabela}` +
         "?select=consultor,produtor,situacao,area_manejo_ha,area_experimental_ha,alterado_em" +
-        "&order=alterado_em.desc&limit=5000"),
+        "&order=alterado_em.desc&limit=5000")
+        .catch(e => {
+          console.error(e);
+          erroNaPagina(/PGRST205|42P01/.test(e.message)
+            ? "A tabela da situação dos produtores ainda não foi criada no banco " +
+              "(rode o banco/schema.sql no Supabase). Dá para ver os produtores, " +
+              "mas salvar só vai funcionar depois disso."
+            : "Não foi possível ler a situação salva. " + e.message);
+          return [];
+        }),
       pede("/rest/v1/visitas?select=consultor,produtor,data_visita,extras" +
         "&order=data_visita.desc,registrado_em.desc&limit=2000")
+        .catch(e => { console.error(e); return []; })
     ]);
     if (linhas === null || visitas === null) return;
 
@@ -622,7 +635,9 @@ $("lista").addEventListener("submit", async e => {
     estado.className = "estado falhou";
     /* 403 aqui é a regra do banco: o nome do login não é o deste
        consultor, ou a tabela ainda não foi criada com a regra nova. */
-    estado.textContent = /\b403\b|42501/.test(err.message)
+    estado.textContent = /PGRST205|42P01/.test(err.message)
+      ? "Não salvou: a tabela ainda não foi criada no banco (falta rodar o schema.sql)."
+      : /\b403\b|42501/.test(err.message)
       ? "O banco não deixou salvar: este produtor não é da sua carteira."
       : "Não foi possível salvar. " + err.message;
   } finally {
