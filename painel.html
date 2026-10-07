@@ -232,6 +232,7 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
           Nova visita
         </a>
         <a class="nova" href="/produtores.html">Produtores</a>
+        <a class="nova" href="/acoes.html">Ações</a>
         <button type="button" class="sair" id="btn-sair">Sair</button>
       </div>
     </div>
@@ -348,6 +349,7 @@ const ORIGENS = { focalizacao: "Focalização", "terra-forte": "Terra Forte" };
 const $ = id => document.getElementById(id);
 
 let visitas = [];    /* tudo o que veio do banco */
+let cumpridas = {};  /* visita_id -> true/false, a marcação mais recente */
 
 /* ===================================================================
    2. SESSÃO
@@ -386,6 +388,16 @@ async function mostraPainel() {
       `?select=*&order=data_visita.desc,registrado_em.desc&limit=2000`);
     if (dados === null) return;            /* caiu no login */
     visitas = dados;
+
+    /* O que já foi marcado como cumprido na página Ações. Sem a tabela
+       (schema.sql não rodado) segue sem: nenhuma conta como cumprida. */
+    const linhas = await pede("/rest/v1/acao_cumprida" +
+      "?select=visita_id,cumprida,alterado_em&order=alterado_em.desc&limit=10000")
+      .catch(e => { console.warn(e); return []; });
+    if (linhas === null) return;
+    cumpridas = {};
+    for (const l of linhas)
+      if (!(l.visita_id in cumpridas)) cumpridas[l.visita_id] = l.cumprida;
     preencheFiltros();
     desenha();
     $("carregando").hidden = true;
@@ -469,7 +481,9 @@ function limpaHtml(html) {
   return caixa.innerHTML;
 }
 
-const vencida = v => v.prazo_acao && v.prazo_acao < hoje && (v.acao || "").trim();
+const cumprida = v => !!cumpridas[v.id];
+const vencida = v => v.prazo_acao && v.prazo_acao < hoje && (v.acao || "").trim()
+                     && !cumprida(v);
 
 function desenha() {
   const lista = filtradas();
@@ -518,6 +532,7 @@ function cartao(v) {
     <span class="quem">${escapa(v.produtor)}</span>
     <span class="por">${escapa(v.consultor)}${v.municipio ? " · " + escapa(v.municipio) : ""}</span>
     ${vencida(v) ? '<span class="etiqueta vencida">ação vencida</span>' : ""}
+    ${(v.acao || "").trim() && cumprida(v) ? '<span class="etiqueta">ação cumprida</span>' : ""}
     ${(v.fotos || []).length ? `<span class="etiqueta">${v.fotos.length} foto${v.fotos.length > 1 ? "s" : ""}</span>` : ""}
     <span class="etiqueta">${escapa(ORIGENS[v.origem] || v.origem)}</span>
   </summary>
@@ -530,6 +545,7 @@ function cartao(v) {
       <h3>Ação combinada</h3>
       <div class="texto">${escapa(v.acao).replace(/\n/g, "<br>")}
         ${v.prazo_acao ? `<br><b>Prazo:</b> ${br(v.prazo_acao)}${vencida(v) ? " (vencido)" : ""}` : ""}
+        ${cumprida(v) ? "<br><b>Cumprida.</b>" : ""}
       </div>` : ""}
 
     ${marcados ? `<h3>Situação na visita</h3><div class="marcados">${marcados}</div>` : ""}
@@ -653,6 +669,7 @@ function csv() {
       [rotulo, v => ((v.extras || {}).situacao || {})[id] ? "sim" : "nao"]),
     ["acao",        v => v.acao],
     ["prazo_acao",  v => br(v.prazo_acao)],
+    ["acao_cumprida", v => (v.acao || "").trim() ? (cumprida(v) ? "sim" : "nao") : ""],
     ["fotos",       v => (v.fotos || []).length],
     ["descricao",   v => v.descricao],
     ["enviado_em",  v => new Date(v.registrado_em).toLocaleString("pt-BR")]

@@ -245,6 +245,51 @@ create policy "consultor le o seu" on public.situacao_produtor
   for select to authenticated
   using (public.sou_admin() or consultor = public.meu_nome());
 
+
+-- ===================================================================
+-- 2.4 AÇÃO CUMPRIDA OU NÃO
+--
+-- A ação nasce na visita (visitas.acao e prazo_acao) e se marca como
+-- cumprida na página acoes.html. A visita não muda: o consultor não
+-- tem update em visitas, e não deve ter — o registro do campo fica
+-- como foi feito. A marcação mora aqui, uma linha por clique, no mesmo
+-- desenho da 2.3: só insere, e vale a mais recente de cada visita.
+-- Desmarcar é uma linha nova com cumprida = false.
+--
+-- A regra amarra a marcação à visita: só marca quem lê a visita, ou
+-- seja, o consultor dela ou o admin (regra "cada um le o seu").
+-- ===================================================================
+create table if not exists public.acao_cumprida (
+  id            uuid        primary key default gen_random_uuid(),
+  visita_id     uuid        not null references public.visitas(id) on delete cascade,
+  cumprida      boolean     not null,
+  alterado_por  uuid        default auth.uid()
+                            references auth.users(id) on delete set null,
+  alterado_em   timestamptz not null default now()
+);
+
+create index if not exists acao_cumprida_idx
+  on public.acao_cumprida (visita_id, alterado_em desc);
+
+alter table public.acao_cumprida enable row level security;
+
+grant select, insert on public.acao_cumprida to authenticated;
+
+drop policy if exists "consultor marca a sua" on public.acao_cumprida;
+create policy "consultor marca a sua" on public.acao_cumprida
+  for insert to authenticated
+  with check (alterado_por = auth.uid()
+              and exists (select 1 from public.visitas v
+                          where v.id = visita_id
+                            and (public.sou_admin() or v.consultor = public.meu_nome())));
+
+drop policy if exists "consultor le a sua" on public.acao_cumprida;
+create policy "consultor le a sua" on public.acao_cumprida
+  for select to authenticated
+  using (exists (select 1 from public.visitas v
+                 where v.id = visita_id
+                   and (public.sou_admin() or v.consultor = public.meu_nome())));
+
 -- ===================================================================
 -- 3. AS FOTOS
 -- Bucket público porque o PDF e o painel montam a URL direta. O caminho
@@ -327,7 +372,8 @@ from public.visitas v
 order by v.produtor, v.data_visita desc, v.registrado_em desc;
 
 
--- 4.3 O que ficou combinado e já venceu — lista de cobrança.
+-- 4.3 O que ficou combinado, já venceu e não foi cumprido — lista de
+--     cobrança. "Cumprida" é a marcação mais recente da 2.4.
 create or replace view public.acoes_pendentes
 with (security_invoker = on) as
 select
@@ -343,6 +389,9 @@ from public.visitas v
 where coalesce(trim(v.acao), '') <> ''
   and v.prazo_acao is not null
   and v.prazo_acao < current_date
+  and not coalesce((select c.cumprida from public.acao_cumprida c
+                    where c.visita_id = v.id
+                    order by c.alterado_em desc limit 1), false)
 order by v.prazo_acao;
 
 
@@ -419,6 +468,7 @@ where consultor in ('TESTE', 'TESTE - APAGAR', 'x')
 select json_build_object(
   'linhas_na_tabela', (select count(*) from public.visitas),
   'linhas_de_situacao', (select count(*) from public.situacao_produtor),
+  'marcacoes_de_acao', (select count(*) from public.acao_cumprida),
 
   'rls_ligada', (select relrowsecurity
                  from pg_class where oid = 'public.visitas'::regclass),
