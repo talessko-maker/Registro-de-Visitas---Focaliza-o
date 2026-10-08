@@ -14,7 +14,7 @@
    (public.consultores.nome) — é por ele que cada um vê o que é seu.
    ------------------------------------------------------------------- */
 const CARTEIRA = [
-  ["Alex","JORGE DALMOLIN","Mafra"],
+  ["Johni Rocha","JORGE DALMOLIN","Mafra"],
   ["Alex","MARCOS ECKEL","Mafra"],
   ["Alex","ANTONIO CIDRAL DA COSTA","Mafra"],
   ["Daniel Bojarski","VALDECIR SLABISKI","Itaiópolis"],
