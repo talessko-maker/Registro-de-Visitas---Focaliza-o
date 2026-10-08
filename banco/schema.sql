@@ -290,6 +290,85 @@ create policy "consultor le a sua" on public.acao_cumprida
                  where v.id = visita_id
                    and (public.sou_admin() or v.consultor = public.meu_nome())));
 
+
+-- ===================================================================
+-- 2.5 CORRIGIR A VISITA DEPOIS DE ENVIADA
+--
+-- O consultor edita o próprio relatório pelo painel, logado. A chave
+-- do site continua só inserindo: quem edita é o papel authenticated,
+-- e só a linha que ele já lê (o consultor dela, ou o admin).
+--
+-- A permissão é por COLUNA, não pela tabela: dá para corrigir o texto,
+-- a data, a ação e o extras (talhão, relator), mas não trocar o
+-- consultor, o produtor, a origem ou o id. Sem isso, um consultor
+-- poderia "passar" uma visita para outro nome — e ela sumiria da tela
+-- dele e apareceria na do colega.
+--
+-- Nada se perde: antes de cada alteração, o gatilho guarda a linha
+-- inteira como estava em visitas_edicoes. O registro do campo continua
+-- recuperável, e fica dito quem mudou e quando.
+-- ===================================================================
+alter table public.visitas add column if not exists editado_em timestamptz;
+
+create table if not exists public.visitas_edicoes (
+  id           uuid        primary key default gen_random_uuid(),
+  visita_id    uuid        not null references public.visitas(id) on delete cascade,
+  antes        jsonb       not null,   -- a linha inteira, como estava
+  editado_por  uuid        default auth.uid()
+                           references auth.users(id) on delete set null,
+  editado_em   timestamptz not null default now()
+);
+
+create index if not exists visitas_edicoes_idx
+  on public.visitas_edicoes (visita_id, editado_em desc);
+
+-- Só o gatilho grava aqui (ele é security definer); quem tem conta lê
+-- o histórico das visitas que já lê.
+alter table public.visitas_edicoes enable row level security;
+revoke all on public.visitas_edicoes from anon, authenticated;
+grant select on public.visitas_edicoes to authenticated;
+
+drop policy if exists "le a edicao do que le" on public.visitas_edicoes;
+create policy "le a edicao do que le" on public.visitas_edicoes
+  for select to authenticated
+  using (exists (select 1 from public.visitas v
+                 where v.id = visita_id
+                   and (public.sou_admin() or v.consultor = public.meu_nome())));
+
+-- O Supabase dá update na tabela inteira por padrão. Tira, e devolve
+-- só nas colunas que se corrigem. (Revogar na tabela já revoga também
+-- o que houvesse por coluna, então rodar de novo dá no mesmo.)
+revoke update on public.visitas from anon, authenticated;
+grant update (data_visita, descricao, descricao_html, acao, prazo_acao, extras)
+  on public.visitas to authenticated;
+
+drop policy if exists "consultor corrige o seu" on public.visitas;
+create policy "consultor corrige o seu" on public.visitas
+  for update to authenticated
+  using      (public.sou_admin() or consultor = public.meu_nome())
+  with check (public.sou_admin() or consultor = public.meu_nome());
+
+create or replace function public.guarda_edicao()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = ''
+as $func$
+begin
+  insert into public.visitas_edicoes (visita_id, antes, editado_por)
+  values (old.id, to_jsonb(old), auth.uid());
+  new.editado_em := now();
+  return new;
+end
+$func$;
+
+revoke execute on function public.guarda_edicao() from public, anon, authenticated;
+
+drop trigger if exists visitas_guarda_edicao on public.visitas;
+create trigger visitas_guarda_edicao
+  before update on public.visitas
+  for each row execute function public.guarda_edicao();
+
 -- ===================================================================
 -- 3. AS FOTOS
 -- Bucket público porque o PDF e o painel montam a URL direta. O caminho
@@ -469,6 +548,7 @@ select json_build_object(
   'linhas_na_tabela', (select count(*) from public.visitas),
   'linhas_de_situacao', (select count(*) from public.situacao_produtor),
   'marcacoes_de_acao', (select count(*) from public.acao_cumprida),
+  'edicoes_de_visita', (select count(*) from public.visitas_edicoes),
 
   'rls_ligada', (select relrowsecurity
                  from pg_class where oid = 'public.visitas'::regclass),

@@ -66,8 +66,10 @@ async function renova() {
 
 /* Todo pedido ao banco passa por aqui, para renovar o token quando
    preciso e cair no login quando a sessão morreu de vez. Sem corpo é
-   leitura; com corpo, grava (POST) e não espera nada de volta. */
-async function pede(caminho, corpo) {
+   leitura. Com corpo, grava: POST insere e não espera nada de volta;
+   PATCH altera e devolve as linhas como ficaram — lista vazia quer
+   dizer que a regra do banco não deixou alterar nenhuma. */
+async function pede(caminho, corpo, metodo = "POST") {
   if (sessao && Date.now() > sessao.expira_em) {
     if (!await renova()) { mostraLogin("Sua sessão expirou. Entre de novo."); return null; }
   }
@@ -77,19 +79,20 @@ async function pede(caminho, corpo) {
   };
   const r = await fetch(`${SUPABASE.url}${caminho}`, corpo === undefined
     ? { headers: cab }
-    : { method: "POST",
-        headers: { ...cab, "Content-Type": "application/json", Prefer: "return=minimal" },
+    : { method: metodo,
+        headers: { ...cab, "Content-Type": "application/json",
+                   Prefer: metodo === "PATCH" ? "return=representation" : "return=minimal" },
         body: JSON.stringify(corpo) });
   /* 401 é token vencido. O 403 só vale como sessão morta na leitura:
      numa gravação ele é a regra do banco recusando, e esse motivo tem
      que chegar à tela em vez de virar "entre de novo". */
   if (r.status === 401 || (r.status === 403 && corpo === undefined)) {
-    if (await renova()) return pede(caminho, corpo);
+    if (await renova()) return pede(caminho, corpo, metodo);
     mostraLogin("Sua sessão expirou. Entre de novo.");
     return null;
   }
   if (!r.ok) throw new Error("banco: " + r.status + " " + await r.text());
-  return corpo === undefined ? r.json() : true;
+  return corpo === undefined || metodo === "PATCH" ? r.json() : true;
 }
 
 /* Sair avisa o Supabase, para o refresh token não continuar valendo

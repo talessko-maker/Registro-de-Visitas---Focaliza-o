@@ -15,7 +15,8 @@
 <style>
 /* ---------------------------------------------------------------
    PAINEL — leitura dos registros, para quem tem conta.
-   Só lê. A gravação continua sendo só pelo formulário.
+   Lê, e deixa o consultor corrigir o próprio relatório. Visita
+   nova continua entrando só pelo formulário.
    --------------------------------------------------------------- */
 :root{
   --principal:#034998;
@@ -201,6 +202,32 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 .pe{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:14px;border-top:1px solid var(--linha)}
 .aviso-pdf{font-size:13px;color:var(--alerta)}
+
+/* ---------- correção da visita ---------- */
+.edicao .campo{margin-bottom:14px}
+.edicao .duplo{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.edicao textarea{
+  width:100%;min-height:80px;padding:10px 12px;
+  border:1px solid var(--linha);border-radius:var(--raio);
+  font:inherit;font-size:16px;color:var(--tinta);background:#fff;resize:vertical;
+}
+.edicao textarea:focus{outline:2px solid var(--apoio);outline-offset:-1px}
+.barra-texto{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.bt-fmt{
+  min-width:40px;min-height:38px;padding:0 12px;
+  background:#fff;border:1px solid var(--linha);border-radius:8px;
+  font-size:15px;font-weight:400;color:var(--tinta);
+}
+.editor{
+  min-height:110px;padding:10px 12px;
+  border:1px solid var(--linha);border-radius:var(--raio);background:#fff;
+  line-height:1.45;
+}
+.editor:focus{outline:2px solid var(--apoio);outline-offset:-1px}
+.editor ul,.editor ol{margin:4px 0;padding-left:22px}
+.edicao .aviso{font-size:12.5px;color:var(--tinta-fraca);margin:0 0 14px}
+.estado-edicao{font-size:13px;color:var(--tinta-fraca)}
+.estado-edicao.falhou{color:var(--alerta)}
 .vazio{background:#fff;border:1px dashed var(--linha);border-radius:14px;
   padding:28px 16px;text-align:center;color:var(--tinta-fraca);font-size:14px}
 .rodape{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
@@ -526,7 +553,7 @@ function cartao(v) {
   ].join("");
 
   return `
-<details class="visita">
+<details class="visita" data-id="${escapa(v.id)}">
   <summary>
     <span class="quando">${br(v.data_visita)}</span>
     <span class="quem">${escapa(v.produtor)}</span>
@@ -557,15 +584,177 @@ function cartao(v) {
       ${areas}
       <dt>Enviado em</dt>
       <dd>${new Date(v.registrado_em).toLocaleString("pt-BR")}</dd>
+      ${v.editado_em ? `<dt>Corrigido em</dt>
+      <dd>${new Date(v.editado_em).toLocaleString("pt-BR")}</dd>` : ""}
     </dl>
 
     <div class="pe">
       <button type="button" class="leve pdf" data-id="${escapa(v.id)}">Baixar PDF</button>
+      <button type="button" class="leve editar">Editar</button>
       <span class="aviso-pdf"></span>
     </div>
   </div>
 </details>`;
 }
+
+/* ===================================================================
+   5.1 CORRIGIR A VISITA
+   O próprio cartão vira formulário. Quem decide quem pode é o banco:
+   o consultor da visita ou o admin, e só os campos do relatório —
+   consultor, produtor e origem não se trocam (schema.sql, 2.5). A
+   versão anterior fica guardada lá, em visitas_edicoes.
+   =================================================================== */
+function formEdicao(v) {
+  const x = v.extras || {};
+  const relatores = [...RELATORES];
+  if (x.relator && !relatores.includes(x.relator)) relatores.push(x.relator);
+  const id = escapa(v.id);
+  const fmt = (cmd, titulo, rotulo) =>
+    `<button type="button" class="bt-fmt" data-cmd="${cmd}" title="${titulo}">${rotulo}</button>`;
+
+  return `
+<form class="corpo edicao" novalidate>
+  <p class="aviso">Corrigindo o relatório. A versão anterior fica guardada no banco.</p>
+  <div class="duplo">
+    <div class="campo">
+      <label for="ed-data-${id}">Data da visita</label>
+      <input type="date" id="ed-data-${id}" name="data_visita"
+             value="${escapa(v.data_visita)}" max="${hoje}" required>
+    </div>
+    <div class="campo">
+      <label for="ed-talhao-${id}">Talhão / referência</label>
+      <input type="text" id="ed-talhao-${id}" name="talhao" maxlength="80"
+             value="${escapa(x.talhao || "")}">
+    </div>
+    <div class="campo">
+      <label for="ed-relator-${id}">Relatório feito por</label>
+      <select id="ed-relator-${id}" name="relator">
+        <option value="">—</option>
+        ${relatores.map(r => `<option${r === x.relator ? " selected" : ""}>${escapa(r)}</option>`).join("")}
+      </select>
+    </div>
+  </div>
+
+  <div class="campo">
+    <label id="ed-rot-${id}">Descrição</label>
+    <div class="barra-texto" role="toolbar" aria-label="Formatação do texto">
+      ${fmt("bold", "Negrito", "<b>N</b>")}${fmt("italic", "Itálico", "<i>I</i>")}${fmt("underline", "Sublinhado", "<u>S</u>")}${fmt("insertUnorderedList", "Lista", "&bull;&nbsp;—")}
+    </div>
+    <div class="editor" contenteditable="true" role="textbox" aria-multiline="true"
+         aria-labelledby="ed-rot-${id}">${limpaHtml(v.descricao_html) ||
+           escapa(v.descricao).replace(/\n/g, "<br>")}</div>
+  </div>
+
+  <div class="campo">
+    <label for="ed-acao-${id}">Ação definida</label>
+    <textarea id="ed-acao-${id}" name="acao">${escapa(v.acao || "")}</textarea>
+  </div>
+  <div class="campo">
+    <label for="ed-prazo-${id}">Prazo da ação</label>
+    <input type="date" id="ed-prazo-${id}" name="prazo_acao" value="${escapa(v.prazo_acao || "")}">
+  </div>
+
+  <div class="pe">
+    <button type="submit">Salvar correção</button>
+    <button type="button" class="leve cancelar">Cancelar</button>
+    <span class="estado-edicao" role="status" aria-live="polite"></span>
+  </div>
+</form>`;
+}
+
+/* Redesenha um cartão só, aberto, sem mexer no resto da lista. */
+function redesenhaCartao(v) {
+  const antigo = [...$("lista").querySelectorAll("details.visita")]
+    .find(d => d.dataset.id === v.id);
+  if (!antigo) return;
+  const caixa = document.createElement("div");
+  caixa.innerHTML = cartao(v);
+  const novo = caixa.firstElementChild;
+  novo.open = true;
+  antigo.replaceWith(novo);
+}
+
+const visitaDo = el => visitas.find(v => v.id === el.closest("details.visita").dataset.id);
+
+$("lista").addEventListener("mousedown", e => {
+  /* sem isto o botão rouba o foco e a seleção do texto some antes do clique */
+  if (e.target.closest(".bt-fmt")) e.preventDefault();
+});
+
+$("lista").addEventListener("click", e => {
+  const fmt = e.target.closest(".bt-fmt");
+  if (fmt) {
+    fmt.closest("form").querySelector(".editor").focus();
+    document.execCommand(fmt.dataset.cmd, false, null);
+    return;
+  }
+  if (e.target.closest("button.editar")) {
+    const corpo = e.target.closest("details.visita").querySelector(".corpo");
+    corpo.outerHTML = formEdicao(visitaDo(e.target));
+    return;
+  }
+  if (e.target.closest("button.cancelar")) redesenhaCartao(visitaDo(e.target));
+});
+
+/* O texto colado entra sem a formatação de onde veio. */
+$("lista").addEventListener("paste", e => {
+  if (!e.target.closest(".editor")) return;
+  e.preventDefault();
+  document.execCommand("insertText", false, e.clipboardData.getData("text/plain"));
+});
+
+$("lista").addEventListener("submit", async e => {
+  const f = e.target;
+  if (!f.classList.contains("edicao")) return;
+  e.preventDefault();
+
+  const v = visitaDo(f);
+  const estado = f.querySelector(".estado-edicao");
+  const botao = f.querySelector("button[type=submit]");
+  const editor = f.querySelector(".editor");
+  const falha = msg => { estado.className = "estado-edicao falhou"; estado.textContent = msg; };
+
+  const data = f.elements.data_visita.value;
+  const texto = editor.innerText.replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+  if (!data)       return falha("Informe a data da visita.");
+  if (data > hoje) return falha("A data da visita não pode ser no futuro.");
+  if (!texto)      return falha("A descrição não pode ficar vazia.");
+
+  const corpo = {
+    data_visita: data,
+    descricao: texto,
+    descricao_html: limpaHtml(editor.innerHTML).trim(),
+    acao: f.elements.acao.value.trim(),
+    prazo_acao: f.elements.prazo_acao.value || null,
+    /* O extras guarda mais coisa (a situação das visitas antigas):
+       troca só o talhão e o relator, o resto segue como estava. */
+    extras: { ...(v.extras || {}),
+              talhao: f.elements.talhao.value.trim() || null,
+              relator: f.elements.relator.value || null }
+  };
+
+  botao.disabled = true;
+  botao.textContent = "Salvando…";
+  estado.className = "estado-edicao";
+  estado.textContent = "";
+  try {
+    const linhas = await pede(
+      `/rest/v1/${SUPABASE.tabela}?id=eq.${encodeURIComponent(v.id)}`, corpo, "PATCH");
+    if (linhas === null) return;            /* caiu no login */
+    /* Lista vazia: o banco aceitou o pedido e não alterou linha nenhuma
+       — a regra não deixou. */
+    if (!linhas.length) throw new Error("sem permissão");
+    visitas[visitas.indexOf(v)] = linhas[0];
+    redesenhaCartao(linhas[0]);
+  } catch (err) {
+    console.error(err);
+    falha(/sem permissão|\b40[13]\b|42501/.test(err.message)
+      ? "O banco não deixou salvar: só o consultor da visita pode corrigi-la."
+      : "Não foi possível salvar. " + err.message);
+    botao.disabled = false;
+    botao.textContent = "Salvar correção";
+  }
+});
 
 /* ===================================================================
    6. O MESMO PDF QUE SAI NO CELULAR
