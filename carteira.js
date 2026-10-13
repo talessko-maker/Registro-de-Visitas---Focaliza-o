@@ -106,7 +106,9 @@ const TECNOLOGIAS = [
   ["tymirium","TYMIRIUM®",""],
   ["alade","ALADE®",""],
   ["verdavis","VERDAVIS®",""],
-  ["adepidyn","ADEPIDYN®",""]
+  ["adepidyn","ADEPIDYN®",""],
+  ["mitrion_mz","MITRION MZ",""],
+  ["seeker","SEEKER",""]
 ];
 
 /* id, rótulo no início, rótulo no fim (opcional; sem ele, o mesmo). */
