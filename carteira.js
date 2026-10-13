@@ -87,10 +87,17 @@ const ITENS = [
 /* -------------------------------------------------------------------
    4. CONHECIMENTO DAS TECNOLOGIAS SYNGENTA
    id, nome, explicação curta (opcional). Marcado na página dos
-   produtores focalizados, um nível por tecnologia; fica gravado dentro
-   da situação, em situacao.tecnologias. O id de uma tecnologia
-   existente não deve mudar, senão o nível já salvo some.
+   produtores focalizados, um nível por tecnologia, duas vezes por
+   safra: no início e no fim, para comparar o antes e o depois. Fica
+   gravado dentro da situação, em situacao.tecnologias[SAFRA].inicio e
+   .fim. O id de uma tecnologia existente não deve mudar, senão o nível
+   já salvo some.
+
+   Na safra seguinte, troque SAFRA: os cartões abrem em branco para a
+   safra nova e as anteriores continuam guardadas.
    ------------------------------------------------------------------- */
+const SAFRA = "2026/27";
+
 const TECNOLOGIAS = [
   ["virestina","VIRESTINA™ technology","metproxibiciclona"],
   ["invencis","INVENCIS®",""],

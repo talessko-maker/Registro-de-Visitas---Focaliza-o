@@ -210,6 +210,17 @@ button:focus-visible,.opt:focus-within,.consultor:focus-visible{
 .niveis input{position:absolute;opacity:0;width:0;height:0}
 .niveis label:has(input:checked){background:var(--apoio);color:#fff}
 .niveis label:focus-within{outline:2.5px solid var(--apoio);outline-offset:-2.5px}
+.tec-nome small.antes{margin-top:2px}
+.tec-nome small.antes b{font-weight:600;color:var(--tinta)}
+
+/* seletor início / fim da safra */
+.momentos{display:inline-flex;margin-bottom:10px}
+.momento{
+  min-height:0;padding:7px 16px;border:0;border-radius:0;
+  background:#fff;color:var(--principal);font-size:14px;font-weight:500;
+}
+.momento+.momento{border-left:1.5px solid var(--linha)}
+.momento[aria-pressed="true"]{background:var(--principal);color:#fff}
 
 /* área em hectares */
 .duplo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -503,12 +514,25 @@ function estadoDe(l) {
   return { situacao: {}, area_manejo_ha: null, area_experimental_ha: null, fonte: "nada" };
 }
 
+/* Níveis das tecnologias na safra da vez: { inicio: {id: nivel}, fim: {...} }.
+   Os primeiros salvos (antes de existir início x fim) vieram soltos,
+   { id: nivel }, e contam como o início desta safra. */
+function tecnologiasDe(situacao) {
+  const t = (situacao && situacao.tecnologias) || {};
+  if (TECNOLOGIAS.some(([id]) => typeof t[id] === "string")) return { inicio: t, fim: {} };
+  const s = t[SAFRA] || {};
+  return { inicio: s.inicio || {}, fim: s.fim || {} };
+}
+
+const rotuloNivel = n => (NIVEIS.find(([id]) => id === n) || [, "—"])[1];
+
 function resumo(e) {
   const marcados = ITENS.filter(([id]) => e.situacao && e.situacao[id]).length;
-  const tecs = (e.situacao && e.situacao.tecnologias) || {};
-  const avaliadas = TECNOLOGIAS.filter(([id]) => tecs[id]).length;
+  const t = tecnologiasDe(e.situacao);
+  const conta = m => TECNOLOGIAS.filter(([id]) => m[id]).length;
   const etiquetas = [`<span class="etiqueta">${marcados} de ${ITENS.length} itens</span>`,
-    `<span class="etiqueta">${avaliadas} de ${TECNOLOGIAS.length} tecnologias</span>`];
+    `<span class="etiqueta">tecnologias: início ${conta(t.inicio)}/${TECNOLOGIAS.length}` +
+    ` · fim ${conta(t.fim)}/${TECNOLOGIAS.length}</span>`];
   if (e.area_manejo_ha != null)
     etiquetas.push(`<span class="etiqueta">manejo ${ha(e.area_manejo_ha)}</span>`);
   if (e.area_experimental_ha != null)
@@ -542,13 +566,16 @@ function cartao(l, i) {
       <span>${escapa(rotulo)}${nota ? `<small>${escapa(nota)}</small>` : ""}</span>
     </label>`).join("");
 
-  const tecs = (e.situacao && e.situacao.tecnologias) || {};
-  const linhasTec = TECNOLOGIAS.map(([id, nome, nota]) => `
+  const t = tecnologiasDe(e.situacao);
+  /* Os dois momentos ficam no formulário; o seletor só mostra um.
+     No fim, cada linha lembra o que foi marcado no início. */
+  const linhasTec = momento => TECNOLOGIAS.map(([id, nome, nota]) => `
     <div class="tec">
-      <span class="tec-nome">${escapa(nome)}${nota ? `<small>${escapa(nota)}</small>` : ""}</span>
+      <span class="tec-nome">${escapa(nome)}${nota ? `<small>${escapa(nota)}</small>` : ""}${
+        momento === "fim" ? `<small class="antes">No início: <b data-antes="${id}">${escapa(rotuloNivel(t.inicio[id]))}</b></small>` : ""}</span>
       <fieldset class="niveis" aria-label="${escapa(nome)}">
         ${NIVEIS.map(([nivel, rotulo]) => `
-        <label><input type="radio" name="tec_${id}" value="${nivel}"${tecs[id] === nivel ? " checked" : ""}>${escapa(rotulo)}</label>`).join("")}
+        <label><input type="radio" name="tec_${momento}_${id}" value="${nivel}"${t[momento][id] === nivel ? " checked" : ""}>${escapa(rotulo)}</label>`).join("")}
       </fieldset>
     </div>`).join("");
 
@@ -567,8 +594,13 @@ function cartao(l, i) {
     <div class="lista">${caixas}</div>
 
     <h3>Conhecimento das tecnologias Syngenta</h3>
-    <p class="dica">Um nível para cada tecnologia.</p>
-    <div class="tecs">${linhasTec}</div>
+    <p class="dica">Safra ${escapa(SAFRA)}. Preencha no início e de novo no fim, com os mesmos critérios, para comparar o antes e o depois.</p>
+    <div class="momentos niveis" role="group" aria-label="Momento da safra">
+      <button type="button" class="momento" data-momento="inicio" aria-pressed="true">Início da safra</button>
+      <button type="button" class="momento" data-momento="fim" aria-pressed="false">Fim da safra</button>
+    </div>
+    <div class="tecs" data-momento="inicio">${linhasTec("inicio")}</div>
+    <div class="tecs" data-momento="fim" hidden>${linhasTec("fim")}</div>
 
     <h3>Área Syngenta</h3>
     <div class="duplo">
@@ -615,9 +647,20 @@ $("lista").addEventListener("input", e => {
   const c = e.target.closest(".produtor");
   if (!c) return;
   marcaSujo(c, true);
+  /* Mudou o início: o "No início" das linhas do fim acompanha. */
+  const inicio = e.target.name && e.target.name.match(/^tec_inicio_(.+)$/);
+  if (inicio) c.querySelector(`[data-antes="${inicio[1]}"]`).textContent = rotuloNivel(e.target.value);
   const estado = c.querySelector(".estado");
   estado.className = "estado";
   estado.textContent = "Alterações não salvas.";
+});
+
+$("lista").addEventListener("click", e => {
+  const b = e.target.closest(".momento");
+  if (!b) return;
+  const corpo = b.closest(".corpo");
+  corpo.querySelectorAll(".momento").forEach(x => x.setAttribute("aria-pressed", x === b));
+  corpo.querySelectorAll(".tecs").forEach(x => { x.hidden = x.dataset.momento !== b.dataset.momento; });
 });
 
 $("lista").addEventListener("submit", async e => {
@@ -643,15 +686,22 @@ $("lista").addEventListener("submit", async e => {
     return;
   }
 
+  /* Só as tecnologias com nível escolhido; sem escolha fica de fora. */
+  const niveisDe = momento => Object.fromEntries(TECNOLOGIAS
+    .map(([id]) => [id, form.elements[`tec_${momento}_${id}`].value])
+    .filter(([, nivel]) => nivel));
+  /* As outras safras seguem como estavam; os soltos antigos viram o
+     início desta, já carregado no formulário. */
+  const antes = (estadoDe(l).situacao || {}).tecnologias || {};
+  const safras = Object.fromEntries(Object.entries(antes)
+    .filter(([k]) => k !== SAFRA && !TECNOLOGIAS.some(([id]) => id === k)));
+
   const linha = {
     consultor: l[0],
     produtor: l[1],
     situacao: {
       ...Object.fromEntries(ITENS.map(([id]) => [id, form.elements[id].checked])),
-      /* Só as tecnologias com nível escolhido; sem escolha fica de fora. */
-      tecnologias: Object.fromEntries(TECNOLOGIAS
-        .map(([id]) => [id, form.elements["tec_" + id].value])
-        .filter(([, nivel]) => nivel))
+      tecnologias: { ...safras, [SAFRA]: { inicio: niveisDe("inicio"), fim: niveisDe("fim") } }
     },
     area_manejo_ha: manejo,
     area_experimental_ha: exp
