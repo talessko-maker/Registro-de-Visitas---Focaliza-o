@@ -83,3 +83,27 @@ const ITENS = [
   ["coleta_analise_solo","Coleta de análise de solo",""],
   ["coleta_analise_nematoide","Coleta de análise de nematoide",""]
 ];
+
+/* -------------------------------------------------------------------
+   4. CONHECIMENTO DAS TECNOLOGIAS SYNGENTA
+   id, nome, explicação curta (opcional). Marcado na página dos
+   produtores focalizados, um nível por tecnologia; fica gravado dentro
+   da situação, em situacao.tecnologias. O id de uma tecnologia
+   existente não deve mudar, senão o nível já salvo some.
+   ------------------------------------------------------------------- */
+const TECNOLOGIAS = [
+  ["virestina","VIRESTINA™ technology","metproxibiciclona"],
+  ["invencis","INVENCIS®",""],
+  ["plinazolin","PLINAZOLIN®",""],
+  ["victrato","VICTRATO®",""],
+  ["tymirium","TYMIRIUM®",""],
+  ["alade","ALADE®",""],
+  ["verdavis","VERDAVIS®",""],
+  ["adepidyn","ADEPIDYN®",""]
+];
+
+const NIVEIS = [
+  ["nao_conhece","Não conhece"],
+  ["conhece","Conhece"],
+  ["ja_usa","Já usa"]
+];

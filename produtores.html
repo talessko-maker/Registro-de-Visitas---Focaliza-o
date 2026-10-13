@@ -192,6 +192,25 @@ button:focus-visible,.opt:focus-within,.consultor:focus-visible{
 .opt:has(input:checked) .marca{background:var(--apoio);border-color:var(--apoio)}
 .opt:has(input:checked) .marca svg{opacity:1}
 
+/* conhecimento das tecnologias: um nível por linha */
+.tecs{display:grid;gap:8px;margin-bottom:20px}
+.tec{
+  display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;
+  padding:8px 12px;background:#fff;
+  border:1.5px solid var(--linha);border-radius:var(--raio);
+}
+.tec-nome{flex:1 1 180px;font-size:14.5px;line-height:1.35}
+.tec-nome small{display:block;font-size:12px;color:var(--tinta-fraca)}
+.niveis{display:flex;border:1.5px solid var(--linha);border-radius:999px;overflow:hidden;margin:0;padding:0}
+.niveis label{
+  position:relative;margin:0;padding:6px 12px;
+  font-size:13px;font-weight:500;color:var(--tinta-fraca);cursor:pointer;user-select:none;
+}
+.niveis label+label{border-left:1.5px solid var(--linha)}
+.niveis input{position:absolute;opacity:0;width:0;height:0}
+.niveis label:has(input:checked){background:var(--apoio);color:#fff}
+.niveis label:focus-within{outline:2.5px solid var(--apoio);outline-offset:-2.5px}
+
 /* área em hectares */
 .duplo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .medida{position:relative}
@@ -486,7 +505,10 @@ function estadoDe(l) {
 
 function resumo(e) {
   const marcados = ITENS.filter(([id]) => e.situacao && e.situacao[id]).length;
-  const etiquetas = [`<span class="etiqueta">${marcados} de ${ITENS.length} itens</span>`];
+  const tecs = (e.situacao && e.situacao.tecnologias) || {};
+  const avaliadas = TECNOLOGIAS.filter(([id]) => tecs[id]).length;
+  const etiquetas = [`<span class="etiqueta">${marcados} de ${ITENS.length} itens</span>`,
+    `<span class="etiqueta">${avaliadas} de ${TECNOLOGIAS.length} tecnologias</span>`];
   if (e.area_manejo_ha != null)
     etiquetas.push(`<span class="etiqueta">manejo ${ha(e.area_manejo_ha)}</span>`);
   if (e.area_experimental_ha != null)
@@ -520,6 +542,16 @@ function cartao(l, i) {
       <span>${escapa(rotulo)}${nota ? `<small>${escapa(nota)}</small>` : ""}</span>
     </label>`).join("");
 
+  const tecs = (e.situacao && e.situacao.tecnologias) || {};
+  const linhasTec = TECNOLOGIAS.map(([id, nome, nota]) => `
+    <div class="tec">
+      <span class="tec-nome">${escapa(nome)}${nota ? `<small>${escapa(nota)}</small>` : ""}</span>
+      <fieldset class="niveis" aria-label="${escapa(nome)}">
+        ${NIVEIS.map(([nivel, rotulo]) => `
+        <label><input type="radio" name="tec_${id}" value="${nivel}"${tecs[id] === nivel ? " checked" : ""}>${escapa(rotulo)}</label>`).join("")}
+      </fieldset>
+    </div>`).join("");
+
   const valor = n => n == null ? "" : n;
 
   return `
@@ -533,6 +565,10 @@ function cartao(l, i) {
     <h3>Situação do produtor</h3>
     <p class="dica">Marque o que já vale hoje.</p>
     <div class="lista">${caixas}</div>
+
+    <h3>Conhecimento das tecnologias Syngenta</h3>
+    <p class="dica">Um nível para cada tecnologia.</p>
+    <div class="tecs">${linhasTec}</div>
 
     <h3>Área Syngenta</h3>
     <div class="duplo">
@@ -610,7 +646,13 @@ $("lista").addEventListener("submit", async e => {
   const linha = {
     consultor: l[0],
     produtor: l[1],
-    situacao: Object.fromEntries(ITENS.map(([id]) => [id, form.elements[id].checked])),
+    situacao: {
+      ...Object.fromEntries(ITENS.map(([id]) => [id, form.elements[id].checked])),
+      /* Só as tecnologias com nível escolhido; sem escolha fica de fora. */
+      tecnologias: Object.fromEntries(TECNOLOGIAS
+        .map(([id]) => [id, form.elements["tec_" + id].value])
+        .filter(([, nivel]) => nivel))
+    },
     area_manejo_ha: manejo,
     area_experimental_ha: exp
   };
