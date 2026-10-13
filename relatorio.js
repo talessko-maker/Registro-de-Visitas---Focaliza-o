@@ -169,15 +169,26 @@ function gerarPdf(r) {
   cor(PDF_CORES.branco);
   doc.text("Relatório de visita", M + 8, 27.5);
 
-  const tf = { l: 26, a: 26 * 110 / 370 };
-  const foc = { l: 30, a: 30 * 87 / 560 };
-  const dirLogo = D - 8;
-  doc.addImage(LOGO_FOC, "PNG", dirLogo - foc.l, 21 - foc.a / 2, foc.l, foc.a);
-  doc.addImage(LOGO_TF, "PNG", dirLogo - foc.l - 4 - tf.l, 21 - tf.a / 2, tf.l, tf.a);
+  /* Visita do formulário da Terra Forte (origem "terra-forte"): o
+     produtor não é focalizado, então o PDF sai sem o logo, o nome do
+     programa e as seções de Focalização. Sem origem é o formulário
+     daqui, que é o de Focalização. */
+  const focalizacao = r.origem !== "terra-forte";
 
-  doc.setFont("Poppins", "normal").setFontSize(7.5);
-  cor(PDF_CORES.claro);
-  doc.text("Programa de Focalização Syngenta", dirLogo, 31.5, { align: "right" });
+  if (focalizacao) {
+    const tf = { l: 26, a: 26 * 110 / 370 };
+    const foc = { l: 30, a: 30 * 87 / 560 };
+    const dirLogo = D - 8;
+    doc.addImage(LOGO_FOC, "PNG", dirLogo - foc.l, 21 - foc.a / 2, foc.l, foc.a);
+    doc.addImage(LOGO_TF, "PNG", dirLogo - foc.l - 4 - tf.l, 21 - tf.a / 2, tf.l, tf.a);
+
+    doc.setFont("Poppins", "normal").setFontSize(7.5);
+    cor(PDF_CORES.claro);
+    doc.text("Programa de Focalização Syngenta", dirLogo, 31.5, { align: "right" });
+  } else {
+    const tf = { l: 30, a: 30 * 110 / 370 };
+    doc.addImage(LOGO_TF, "PNG", D - 8 - tf.l, 25 - tf.a, tf.l, tf.a);
+  }
 
   /* ---------- identificação ---------- */
   const campo = (rotulo, valor, x, topo) => {
@@ -262,7 +273,7 @@ function gerarPdf(r) {
   paragrafo(r.acao, "Nenhuma ação registrada.");
 
   /* ---------- situação do produtor ---------- */
-  if (r.situacao) {
+  if (focalizacao && r.situacao) {
     titulo("Situação do produtor");
     doc.setFont("Poppins", "normal").setFontSize(9.5);
     const metade = L / 2;
@@ -291,7 +302,8 @@ function gerarPdf(r) {
   }
 
   /* ---------- área Syngenta ---------- */
-  if (r.area_manejo_ha !== undefined || r.area_experimental_ha !== undefined) {
+  if (focalizacao &&
+      (r.area_manejo_ha !== undefined || r.area_experimental_ha !== undefined)) {
     const ha = v => (v === null || v === undefined)
       ? "—" : v.toLocaleString("pt-BR") + " ha";
     titulo("Área Syngenta");

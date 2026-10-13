@@ -788,6 +788,7 @@ async function paraRelatorio(v) {
     catch (e) { perdidas++; console.warn("foto nao veio:", url, e.message); }
   }
   return [{
+    origem: v.origem,
     consultor: v.consultor,
     produtor: v.produtor,
     municipio: v.municipio || "",
