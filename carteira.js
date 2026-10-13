@@ -109,8 +109,9 @@ const TECNOLOGIAS = [
   ["adepidyn","ADEPIDYN®",""]
 ];
 
+/* id, rótulo no início, rótulo no fim (opcional; sem ele, o mesmo). */
 const NIVEIS = [
   ["nao_conhece","Não conhece"],
   ["conhece","Conhece"],
-  ["ja_usa","Já usa"]
+  ["ja_usa","Já usa","Passou a usar"]
 ];

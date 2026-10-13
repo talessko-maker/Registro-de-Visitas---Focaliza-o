@@ -574,8 +574,8 @@ function cartao(l, i) {
       <span class="tec-nome">${escapa(nome)}${nota ? `<small>${escapa(nota)}</small>` : ""}${
         momento === "fim" ? `<small class="antes">No início: <b data-antes="${id}">${escapa(rotuloNivel(t.inicio[id]))}</b></small>` : ""}</span>
       <fieldset class="niveis" aria-label="${escapa(nome)}">
-        ${NIVEIS.map(([nivel, rotulo]) => `
-        <label><input type="radio" name="tec_${momento}_${id}" value="${nivel}"${t[momento][id] === nivel ? " checked" : ""}>${escapa(rotulo)}</label>`).join("")}
+        ${NIVEIS.map(([nivel, rotulo, rotuloFim]) => `
+        <label><input type="radio" name="tec_${momento}_${id}" value="${nivel}"${t[momento][id] === nivel ? " checked" : ""}>${escapa(momento === "fim" && rotuloFim || rotulo)}</label>`).join("")}
       </fieldset>
     </div>`).join("");
 
