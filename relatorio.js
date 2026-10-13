@@ -380,9 +380,30 @@ function baixaArquivo(blob, nome) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-function baixaPdf(r) {
+/* No celular o PDF vai pela tela de compartilhar do aparelho, só o
+   arquivo. Baixado e repassado depois, o Chrome do Android manda junto
+   o endereço "blob:" do download, que aparece como link no WhatsApp.
+   No computador continua baixando. semGesto recebe o arquivo quando o
+   navegador recusa abrir a tela por ter passado tempo demais desde o
+   toque (o painel busca as fotos antes); quem chamou pede outro toque. */
+const NO_CELULAR = matchMedia("(pointer: coarse)").matches;
+
+function entregaArquivo(blob, nome, semGesto) {
+  const arquivo = new File([blob], nome, { type: blob.type });
+  if (!NO_CELULAR || !navigator.canShare || !navigator.canShare({ files: [arquivo] })) {
+    baixaArquivo(blob, nome);
+    return;
+  }
+  navigator.share({ files: [arquivo] }).catch(e => {
+    if (e.name === "AbortError") return;           // fechou a tela de compartilhar
+    if (e.name === "NotAllowedError" && semGesto) return semGesto(arquivo);
+    baixaArquivo(blob, nome);
+  });
+}
+
+function baixaPdf(r, semGesto) {
   try {
-    baixaArquivo(gerarPdf(r).output("blob"), nomeArquivo(r, ".pdf"));
+    entregaArquivo(gerarPdf(r).output("blob"), nomeArquivo(r, ".pdf"), semGesto);
     return true;
   } catch (e) {
     console.error(e);

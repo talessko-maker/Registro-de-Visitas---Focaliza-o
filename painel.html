@@ -811,6 +811,8 @@ async function paraRelatorio(v) {
   }, perdidas];
 }
 
+const pdfsProntos = new Map();
+
 $("lista").addEventListener("click", async e => {
   const botao = e.target.closest("button.pdf");
   if (!botao) return;
@@ -819,12 +821,25 @@ $("lista").addEventListener("click", async e => {
   const aviso = botao.parentElement.querySelector(".aviso-pdf");
   if (!visita) return;
 
+  /* PDF já pronto esperando um toque novo para abrir o compartilhar. */
+  const pronto = pdfsProntos.get(visita.id);
+  if (pronto) {
+    pdfsProntos.delete(visita.id);
+    botao.textContent = "Baixar PDF";
+    navigator.share({ files: [pronto] }).catch(() => {});
+    return;
+  }
+
   botao.disabled = true;
   botao.textContent = "Gerando…";
   aviso.textContent = "";
   try {
     const [registro, perdidas] = await paraRelatorio(visita);
-    if (!baixaPdf(registro)) throw new Error("o PDF não pôde ser montado neste navegador");
+    const semGesto = arquivo => {
+      pdfsProntos.set(visita.id, arquivo);
+      botao.textContent = "Enviar PDF";
+    };
+    if (!baixaPdf(registro, semGesto)) throw new Error("o PDF não pôde ser montado neste navegador");
     if (perdidas) {
       aviso.textContent = perdidas === 1
         ? "1 foto não pôde ser carregada e ficou de fora"
