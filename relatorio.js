@@ -330,15 +330,24 @@ function gerarPdf(r) {
     const colunas = n === 1 ? 1 : (n === 2 || n === 4) ? 2 : 3;
     const vao = 6;
     const larg = Math.min((L - vao * (colunas - 1)) / colunas, 110);
+    /* Cabe na caixa larg × 70 sem deformar: foto em pé, que bateria no
+       teto de altura, encolhe também na largura e fica no meio da coluna. */
+    const medidas = r.fotos.map(foto => {
+      const prop = doc.getImageProperties(foto.dados);
+      const esc = Math.min(larg / prop.width, 70 / prop.height);
+      return { l: prop.width * esc, a: prop.height * esc };
+    });
     let alturaLinha = 0;
 
     r.fotos.forEach((foto, i) => {
-      const prop = doc.getImageProperties(foto.dados);
-      const alt = Math.min(larg * prop.height / prop.width, 70);
-      if (i % colunas === 0) { vira(alt + 4); alturaLinha = alt; }
-      else alturaLinha = Math.max(alturaLinha, alt);
-      doc.addImage(foto.dados, "JPEG", M + (i % colunas) * (larg + vao), y,
-                   larg, alt, "foto" + i, "MEDIUM");
+      const { l, a } = medidas[i];
+      if (i % colunas === 0) {
+        /* A quebra de página olha a foto mais alta da linha, não só a primeira. */
+        alturaLinha = Math.max(...medidas.slice(i, i + colunas).map(m => m.a));
+        vira(alturaLinha + 4);
+      }
+      doc.addImage(foto.dados, "JPEG", M + (i % colunas) * (larg + vao) + (larg - l) / 2, y,
+                   l, a, "foto" + i, "MEDIUM");
       if (i % colunas === colunas - 1 || i === n - 1) y += alturaLinha + 5;
     });
     y += 2;
