@@ -711,13 +711,13 @@ function reduz(arquivo) {
       const img = new Image();
       img.onerror = falha;
       img.onload = () => {
-        const max = 1280;
+        const max = 1920;
         const esc = Math.min(1, max / Math.max(img.width, img.height));
         const cv = document.createElement("canvas");
         cv.width  = Math.round(img.width  * esc);
         cv.height = Math.round(img.height * esc);
         cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-        ok({ nome: arquivo.name, dados: cv.toDataURL("image/jpeg", 0.72) });
+        ok({ nome: arquivo.name, dados: cv.toDataURL("image/jpeg", 0.85) });
       };
       img.src = leitor.result;
     };

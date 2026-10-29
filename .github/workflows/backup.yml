@@ -1,0 +1,35 @@
+# Backup semanal do Supabase para o Google Drive. O que faz e onde
+# guarda está em banco/backup.sh. Para rodar fora de hora: aba Actions
+# do GitHub > Backup > Run workflow.
+name: Backup
+
+on:
+  schedule:
+    - cron: "0 6 * * 0"     # domingo, 3h da manhã em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # pg_dump precisa ser da mesma versão do banco ou mais nova.
+      - name: Ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17 rclone zip
+
+      - name: Backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: https://iozeyyuftogrpsndkrvj.supabase.co
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+        run: bash banco/backup.sh
