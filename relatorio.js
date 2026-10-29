@@ -191,24 +191,31 @@ function gerarPdf(r) {
   }
 
   /* ---------- identificação ---------- */
+  /* Valor longo (dois produtores no mesmo nome) quebra dentro da própria
+     coluna em vez de invadir a do lado; devolve quantas linhas usou. */
+  const col = L / 3, ENTRE = 4.6;
   const campo = (rotulo, valor, x, topo) => {
     doc.setFont("Poppins", "normal").setFontSize(8);
     cor(PDF_CORES.fraca);
     doc.text(rotulo, x, topo);
     doc.setFont("Poppins", "bold").setFontSize(10.5);
     cor(PDF_CORES.tinta);
-    doc.text(valor || "—", x, topo + 5.5);
+    const linhas = doc.splitTextToSize(valor || "—", col - 5);
+    linhas.forEach((ln, i) => doc.text(ln, x, topo + 5.5 + i * ENTRE));
+    return linhas.length;
   };
 
-  const col = L / 3;
-  campo("Produtor",   r.produtor,        M,           47);
-  campo("Município",  r.municipio,       M + col,     47);
-  campo("Data da visita", br(r.data_visita), M + 2 * col, 47);
-  campo("Consultor responsável", r.consultor, M, 61);
-  campo("Talhão / referência", r.talhao, M + col, 61);
-  if (r.relator) campo("Relatório feito por", r.relator, M + 2 * col, 61);
+  const l1 = Math.max(
+    campo("Produtor",   r.produtor,        M,           47),
+    campo("Município",  r.municipio,       M + col,     47),
+    campo("Data da visita", br(r.data_visita), M + 2 * col, 47));
+  const topo2 = 61 + (l1 - 1) * ENTRE;
+  const l2 = Math.max(
+    campo("Consultor responsável", r.consultor, M, topo2),
+    campo("Talhão / referência", r.talhao, M + col, topo2),
+    r.relator ? campo("Relatório feito por", r.relator, M + 2 * col, topo2) : 1);
 
-  y = 72;
+  y = topo2 + 11 + (l2 - 1) * ENTRE;
   doc.setDrawColor(...PDF_CORES.linha).setLineWidth(0.3);
   doc.line(M, y, D, y);
   y += 9;
@@ -326,29 +333,61 @@ function gerarPdf(r) {
   /* ---------- fotos ---------- */
   if (r.fotos && r.fotos.length) {
     titulo("Registro fotográfico");
-    const n = r.fotos.length;
-    const colunas = n === 1 ? 1 : (n === 2 || n === 4) ? 2 : 3;
-    const vao = 6;
-    const larg = Math.min((L - vao * (colunas - 1)) / colunas, 110);
-    /* Cabe na caixa larg × 70 sem deformar: foto em pé, que bateria no
-       teto de altura, encolhe também na largura e fica no meio da coluna. */
-    const medidas = r.fotos.map(foto => {
+    /* Linhas justificadas: as fotos de uma linha têm a mesma altura e,
+       somadas, ocupam a largura exata entre as margens — sem deformar.
+       Até 3 por linha, repartidas por igual (5 fotos = 3 + 2, 7 = 3 + 2 + 2). */
+    const vao = 4, TETO = 120, TETO_SOZINHA = 140;
+    const fotos = r.fotos.map((foto, i) => {
       const prop = doc.getImageProperties(foto.dados);
-      const esc = Math.min(larg / prop.width, 70 / prop.height);
-      return { l: prop.width * esc, a: prop.height * esc };
+      return { dados: foto.dados, prop: prop.width / prop.height, apelido: "foto" + i };
     });
-    let alturaLinha = 0;
+    const nLinhas = Math.ceil(fotos.length / 3);
+    const linhas = [];
+    for (let k = 0, i = 0; k < nLinhas; k++) {
+      const qtd = Math.ceil((fotos.length - i) / (nLinhas - k));
+      linhas.push(fotos.slice(i, i + qtd));
+      i += qtd;
+    }
 
-    r.fotos.forEach((foto, i) => {
-      const { l, a } = medidas[i];
-      if (i % colunas === 0) {
-        /* A quebra de página olha a foto mais alta da linha, não só a primeira. */
-        alturaLinha = Math.max(...medidas.slice(i, i + colunas).map(m => m.a));
-        vira(alturaLinha + 4);
+    linhas.forEach(linha => {
+      const util = L - vao * (linha.length - 1);
+      const soma = linha.reduce((s, f) => s + f.prop, 0);
+      const alt = util / soma;
+
+      /* Uma foto só, em pé: inteira, encostada na margem esquerda como o
+         texto, e tão alta quanto o resto da página deixa (12 a 17 cm;
+         com menos de 12 livres, vai para a página seguinte). */
+      if (linha.length === 1 && linha[0].prop < 1 && alt > TETO_SOZINHA) {
+        const f = linha[0];
+        vira(120 + 4);
+        /* 21 = vão + respiro + rodapé, para ele não ir sozinho à página 2 */
+        const a = Math.min(170, PDF.fim - 21 - y), l = a * f.prop;
+        doc.addImage(f.dados, "JPEG", M, y, l, a, f.apelido, "MEDIUM");
+        y += a + vao;
+        return;
       }
-      doc.addImage(foto.dados, "JPEG", M + (i % colunas) * (larg + vao) + (larg - l) / 2, y,
-                   l, a, "foto" + i, "MEDIUM");
-      if (i % colunas === colunas - 1 || i === n - 1) y += alturaLinha + 5;
+
+      /* Linha que passaria do teto (duas fotos em pé, uma quadrada sozinha):
+         fica no teto e cada foto é aparada em cima e embaixo, por igual,
+         sem perder a largura. */
+      const altLinha = Math.min(alt, linha.length === 1 ? TETO_SOZINHA : TETO);
+      vira(altLinha + 4);
+      let x = M;
+      linha.forEach(f => {
+        const l = util * f.prop / soma, a = l / f.prop;
+        if (a > altLinha + 0.01) {
+          doc.saveGraphicsState();
+          doc.rect(x, y, l, altLinha, null);
+          doc.clip();
+          doc.discardPath();
+          doc.addImage(f.dados, "JPEG", x, y - (a - altLinha) / 2, l, a, f.apelido, "MEDIUM");
+          doc.restoreGraphicsState();
+        } else {
+          doc.addImage(f.dados, "JPEG", x, y, l, a, f.apelido, "MEDIUM");
+        }
+        x += l + vao;
+      });
+      y += altLinha + vao;
     });
     y += 2;
   }
