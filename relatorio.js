@@ -276,8 +276,8 @@ function gerarPdf(r) {
   titulo("Descrição da visita");
   rico(r.descricao_html || (r.descricao ? escapaPdf(r.descricao) : ""));
 
-  titulo(r.prazo_acao ? "Ação definida — prazo " + br(r.prazo_acao) : "Ação definida");
-  paragrafo(r.acao, "Nenhuma ação registrada.");
+  /* A ação definida (e o prazo) fica só no sistema — página Ações —
+     e não sai no PDF que vai para o produtor. */
 
   /* ---------- situação do produtor ---------- */
   if (focalizacao && r.situacao) {
