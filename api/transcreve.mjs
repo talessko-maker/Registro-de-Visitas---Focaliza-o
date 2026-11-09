@@ -8,7 +8,7 @@
      GEMINI_API_KEY  chave criada em aistudio.google.com
      GEMINI_MODELO   opcional; sem ela usa o modelo abaixo
    =================================================================== */
-const MODELO_PADRAO = "gemini-2.5-flash";
+const MODELO_PADRAO = "gemini-3.8-flash";
 const MAX_BYTES = 4 * 1024 * 1024;   /* a Vercel recusa corpo acima de 4,5 MB */
 
 const DIAS = ["domingo", "segunda-feira", "terça-feira", "quarta-feira",
