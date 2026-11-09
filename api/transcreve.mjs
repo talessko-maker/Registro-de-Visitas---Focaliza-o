@@ -9,6 +9,11 @@
      GEMINI_MODELO   opcional; sem ela usa o modelo abaixo
    =================================================================== */
 const MODELO_PADRAO = "gemini-3.8-flash";
+/* Quando o principal está lotado (503/429) ou sumiu (404), tenta estes.
+   Os "-latest" acompanham o modelo atual do Google e não se aposentam. */
+const RESERVAS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
+const PRAZO_TENTATIVA_MS = 25000;   /* a função toda tem 60 s */
+const PRAZO_TOTAL_MS = 55000;
 const MAX_BYTES = 4 * 1024 * 1024;   /* a Vercel recusa corpo acima de 4,5 MB */
 
 const DIAS = ["domingo", "segunda-feira", "terça-feira", "quarta-feira",
@@ -59,43 +64,55 @@ Vazio se nenhum prazo foi dito.
 Não invente nada que não foi dito. Mantenha exatamente como falados os nomes de produtos, \
 pragas, doenças, cultivares, talhões, números e doses.`;
 
-  const modelo = process.env.GEMINI_MODELO || MODELO_PADRAO;
-  let r;
-  try {
-    r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
-        body: JSON.stringify({
-          contents: [{ parts: [
-            { text: instrucao },
-            { inline_data: { mime_type: tipo, data: audio.toString("base64") } }
-          ] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                transcricao: { type: "STRING" },
-                descricao:   { type: "STRING" },
-                acao:        { type: "STRING" },
-                prazo:       { type: "STRING" }
-              },
-              required: ["transcricao", "descricao", "acao", "prazo"]
-            }
-          }
-        })
-      });
-  } catch (e) {
-    return responde(502, { erro: "Gemini fora do ar: " + e.message });
+  const pedido = JSON.stringify({
+    contents: [{ parts: [
+      { text: instrucao },
+      { inline_data: { mime_type: tipo, data: audio.toString("base64") } }
+    ] }],
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          transcricao: { type: "STRING" },
+          descricao:   { type: "STRING" },
+          acao:        { type: "STRING" },
+          prazo:       { type: "STRING" }
+        },
+        required: ["transcricao", "descricao", "acao", "prazo"]
+      }
+    }
+  });
+
+  const modelos = [...new Set([process.env.GEMINI_MODELO || MODELO_PADRAO, ...RESERVAS])];
+  const fim = Date.now() + PRAZO_TOTAL_MS;
+  let r = null, aviso = "";
+  for (const modelo of modelos) {
+    const resta = fim - Date.now();
+    if (resta < 5000) break;
+    try {
+      r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
+          body: pedido,
+          signal: AbortSignal.timeout(Math.min(PRAZO_TENTATIVA_MS, resta))
+        });
+    } catch (e) {
+      r = null;
+      aviso = modelo + ": sem resposta (" + e.name + ")";
+      console.error("gemini", aviso);
+      continue;
+    }
+    if (r.ok) break;
+    aviso = modelo + " " + r.status + ": " + (await r.text()).slice(0, 300);
+    console.error("gemini", aviso);
+    /* chave errada ou pedido inválido: outro modelo não resolve */
+    if (![404, 429, 500, 503].includes(r.status)) break;
   }
 
-  if (!r.ok) {
-    const aviso = (await r.text()).slice(0, 300);
-    console.error("gemini", r.status, aviso);
-    return responde(502, { erro: "Gemini " + r.status + ": " + aviso });
-  }
+  if (!r || !r.ok) return responde(502, { erro: "Gemini " + aviso });
 
   try {
     const corpo = await r.json();
