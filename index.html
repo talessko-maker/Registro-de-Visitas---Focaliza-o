@@ -208,6 +208,25 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
   cursor:pointer;
 }
 
+/* ---------- relato por voz ---------- */
+.gravando{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  min-height:52px;padding:8px 8px 8px 14px;
+  background:#fff;border:1.5px solid var(--alerta);border-radius:var(--raio);
+}
+.gravando .ponto{
+  flex:none;width:12px;height:12px;border-radius:50%;background:var(--alerta);
+  animation:pisca 1.2s ease-in-out infinite;
+}
+@keyframes pisca{50%{opacity:.25}}
+.gravando .tempo{flex:1;font-variant-numeric:tabular-nums;font-weight:500}
+.gravando button{
+  min-height:40px;padding:0 16px;
+  background:var(--alerta);border:0;border-radius:8px;
+  color:#fff;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;
+}
+#voz-estado.alerta{color:#7A1818}
+
 /* ---------- envio ---------- */
 .enviar{
   width:100%;
@@ -399,6 +418,14 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
     <ul class="fila-lista" id="fila-lista"></ul>
   </div>
 
+  <div class="fila espera" id="rascunhos" hidden>
+    <div class="fila-topo">
+      <span class="fila-luz" aria-hidden="true"></span>
+      <span class="fila-estado" id="rascunhos-estado" role="status" aria-live="polite"></span>
+    </div>
+    <ul class="fila-lista" id="rascunhos-lista"></ul>
+  </div>
+
   <form id="form" novalidate>
     <p class="erro" id="erro" hidden></p>
 
@@ -443,6 +470,26 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
 
     <fieldset>
       <legend>O que aconteceu</legend>
+
+      <div class="campo">
+        <button type="button" class="foto-btn" id="btn-voz">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="7" y="2.5" width="6" height="10" rx="3"
+              stroke="currentColor" stroke-width="1.6"/>
+            <path d="M4.5 9.5a5.5 5.5 0 0011 0M10 15v2.5"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          Relatar por voz
+        </button>
+        <div class="gravando" id="gravando" hidden>
+          <span class="ponto" aria-hidden="true"></span>
+          <span class="tempo" id="voz-tempo">0:00</span>
+          <button type="button" id="btn-voz-parar">Parar</button>
+        </div>
+        <p class="dica" id="voz-estado" role="status" aria-live="polite">Conte o que viu,
+          o que ficou combinado e o prazo. A fala vira texto nos campos abaixo para você
+          conferir. Sem sinal, o áudio fica guardado e vira texto quando a conexão voltar.</p>
+      </div>
 
       <div class="campo">
         <label id="rot-descricao">Descrição</label>
@@ -822,6 +869,12 @@ form.addEventListener("submit", async e => {
   }
 
   ultimo = registro;
+  /* o relato por voz que virou este registro já está salvo nele */
+  if (rascunhoAberto) {
+    await vozRemove(rascunhoAberto).catch(() => {});
+    rascunhoAberto = null;
+    desenhaRascunhos();
+  }
   $("pronto-texto").textContent = texto;
   $("pronto-resumo").innerHTML = `
     <dt>Produtor</dt><dd>${registro.produtor}</dd>
@@ -853,6 +906,7 @@ $("btn-novo").addEventListener("click", () => {
   desenhaFotos();
   editor.innerHTML = "";
   marcaVazio();
+  vozAviso(VOZ_DICA);
   selConsultor.value = c;
   selConsultor.dispatchEvent(new Event("change"));
   $("data").value = hoje.toISOString().slice(0, 10);
@@ -1153,16 +1207,286 @@ function filaBotao(rotulo, titulo, acao) {
   return b;
 }
 
+/* ===================================================================
+   6. RELATO POR VOZ
+   O áudio é guardado no aparelho antes de qualquer tentativa, junto com
+   quem/quando já preenchidos. Com sinal, vira texto na hora e entra nos
+   campos; sem sinal, fica como rascunho e é transcrito quando a conexão
+   voltar — e o consultor abre, confere e salva. Nada é enviado sem
+   alguém ler o texto antes.
+   =================================================================== */
+const MAX_VOZ_SEG = 5 * 60;          /* 5 min cabem folgado no limite de envio */
+const MAX_VOZ_BYTES = 4 * 1024 * 1024;
+
+const VOZ_DICA = $("voz-estado").textContent.replace(/\s+/g, " ").trim();
+let gravador = null;
+let relogio = null;
+let rascunhoAberto = null;   /* id do rascunho carregado no formulário */
+let transcrevendo = false;
+
+function abreVoz() {
+  return new Promise((ok, falha) => {
+    const p = indexedDB.open("rascunhos-voz", 1);
+    p.onupgradeneeded = () => p.result.createObjectStore("audios", { keyPath: "id" });
+    p.onsuccess = () => ok(p.result);
+    p.onerror = () => falha(p.error);
+  });
+}
+
+function naVoz(modo, acao) {
+  return abreVoz().then(bd => new Promise((ok, falha) => {
+    const t = bd.transaction("audios", modo);
+    const pedido = acao(t.objectStore("audios"));
+    pedido.onsuccess = () => ok(pedido.result);
+    pedido.onerror = () => falha(pedido.error);
+  }));
+}
+
+const vozGrava  = r  => naVoz("readwrite", l => l.put(r));
+const vozRemove = id => naVoz("readwrite", l => l.delete(id));
+const vozLista  = () => naVoz("readonly",  l => l.getAll());
+
+function vozAviso(texto, alerta) {
+  $("voz-estado").textContent = texto;
+  $("voz-estado").classList.toggle("alerta", !!alerta);
+}
+
+const minSeg = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+
+/* Chrome/Android grava webm; o Safari do iPhone só sabe mp4. */
+function formatoVoz() {
+  if (!window.MediaRecorder) return null;
+  return ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"]
+    .find(t => MediaRecorder.isTypeSupported(t)) || "";
+}
+
+$("btn-voz").addEventListener("click", async () => {
+  const formato = formatoVoz();
+  if (formato === null || !navigator.mediaDevices) {
+    return vozAviso("Este navegador não grava áudio. Atualize o Chrome ou o Safari.", true);
+  }
+  let fluxo;
+  try {
+    fluxo = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch {
+    return vozAviso("O microfone não foi liberado. Permita o acesso ao microfone "
+                  + "nas configurações do navegador e tente de novo.", true);
+  }
+
+  const pedacos = [];
+  gravador = new MediaRecorder(fluxo,
+    formato ? { mimeType: formato, audioBitsPerSecond: 32000 } : undefined);
+  gravador.ondataavailable = e => { if (e.data.size) pedacos.push(e.data); };
+  gravador.onstop = () => {
+    fluxo.getTracks().forEach(t => t.stop());
+    clearInterval(relogio);
+    $("gravando").hidden = true;
+    $("btn-voz").hidden = false;
+    const tipo = (gravador.mimeType || formato || "audio/webm").split(";")[0];
+    gravador = null;
+    terminouGravacao(new Blob(pedacos, { type: tipo }));
+  };
+
+  const inicio = Date.now();
+  $("voz-tempo").textContent = "0:00";
+  relogio = setInterval(() => {
+    const s = Math.floor((Date.now() - inicio) / 1000);
+    $("voz-tempo").textContent = minSeg(s) + " de " + minSeg(MAX_VOZ_SEG);
+    if (s >= MAX_VOZ_SEG && gravador) gravador.stop();
+  }, 500);
+
+  gravador.start(1000);
+  $("btn-voz").hidden = true;
+  $("gravando").hidden = false;
+  vozAviso("Gravando… fale normalmente. Toque em Parar quando terminar.");
+});
+
+$("btn-voz-parar").addEventListener("click", () => { if (gravador) gravador.stop(); });
+
+async function terminouGravacao(audio) {
+  if (audio.size < 1000) return vozAviso("Não deu para ouvir nada. Tente gravar de novo.", true);
+  if (audio.size > MAX_VOZ_BYTES) {
+    return vozAviso("O áudio ficou grande demais. Grave em partes menores — "
+                  + "cada parte entra em sequência nos campos.", true);
+  }
+
+  const rascunho = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    criado_em: new Date().toISOString(),
+    audio,
+    tipo: audio.type,
+    consultor: selConsultor.value,
+    relator: $("relator").value,
+    produtor: selProdutor.value,
+    data_visita: $("data").value,
+    talhao: $("talhao").value.trim()
+  };
+  try { await vozGrava(rascunho); } catch (e) { console.warn(e); }
+
+  vozAviso("Transformando a fala em texto…");
+  try {
+    preencheComVoz(await transcreve(rascunho));
+    await vozRemove(rascunho.id).catch(() => {});
+    vozAviso("Pronto. Confira o texto nos campos abaixo antes de salvar.");
+  } catch (e) {
+    console.warn("voz:", e.message);
+    if (e.semRede) {
+      vozAviso("Sem conexão agora. O áudio ficou guardado no aparelho e aparece no alto "
+             + "da página; quando o sinal voltar ele vira texto para você revisar.", true);
+    } else {
+      await vozGrava({ ...rascunho, falha: e.message }).catch(() => {});
+      vozAviso("Não foi possível transcrever agora. O áudio ficou guardado no alto da "
+             + "página e será tentado de novo.", true);
+    }
+    desenhaRascunhos();
+  }
+}
+
+async function transcreve(r) {
+  const resp = await busca("/api/transcreve?data=" + encodeURIComponent(r.data_visita || ""), {
+    method: "POST",
+    headers: { "Content-Type": r.tipo },
+    body: r.audio
+  });
+  const corpo = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(corpo.erro || "transcrição: " + resp.status);
+  return corpo;
+}
+
+const escapaHtml = t => String(t)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* Soma ao que já está escrito, nunca apaga: o consultor pode gravar em
+   partes, ou gravar depois de ter digitado. */
+function preencheComVoz(res) {
+  const texto = res.descricao || res.transcricao || "";
+  if (texto) {
+    editor.insertAdjacentHTML("beforeend", texto.split(/\n+/)
+      .filter(p => p.trim()).map(p => `<p>${escapaHtml(p.trim())}</p>`).join(""));
+    marcaVazio();
+  }
+  if (res.acao) {
+    const acao = $("acao");
+    acao.value = acao.value.trim() ? acao.value.trim() + "\n" + res.acao : res.acao;
+  }
+  if (res.prazo && !$("prazo").value) $("prazo").value = res.prazo;
+}
+
+/* --- rascunhos que esperam sinal ou revisão --- */
+async function tentaRascunhos() {
+  if (transcrevendo || !navigator.onLine) return desenhaRascunhos();
+  transcrevendo = true;
+  try {
+    for (const r of await vozLista().catch(() => [])) {
+      if (r.resultado) continue;
+      try {
+        r.resultado = await transcreve(r);
+        delete r.falha;
+      } catch (e) {
+        if (e.semRede) break;
+        r.falha = e.message;
+      }
+      await vozGrava(r).catch(() => {});
+      await desenhaRascunhos();
+    }
+  } finally {
+    transcrevendo = false;
+    await desenhaRascunhos();
+  }
+}
+
+async function desenhaRascunhos() {
+  const rascunhos = (await vozLista().catch(() => []))
+    .sort((a, b) => a.criado_em.localeCompare(b.criado_em));
+  const painel = $("rascunhos");
+  painel.hidden = rascunhos.length === 0;
+  if (!rascunhos.length) return;
+
+  const prontos = rascunhos.filter(r => r.resultado).length;
+  $("rascunhos-estado").textContent =
+    (rascunhos.length === 1 ? "1 relato por voz" : rascunhos.length + " relatos por voz")
+    + (prontos ? " — " + prontos + " pronto" + (prontos > 1 ? "s" : "") + " para revisar"
+               : " esperando sinal para virar texto");
+
+  const lista = $("rascunhos-lista");
+  lista.innerHTML = "";
+  for (const r of rascunhos) {
+    const quando = new Date(r.criado_em);
+    const dados = document.createElement("div");
+    dados.className = "fila-dados";
+    dados.appendChild(filaLinha("fila-quem", r.produtor || "Produtor não escolhido"));
+    dados.appendChild(filaLinha("fila-quando",
+      "Gravado em " + quando.toLocaleDateString("pt-BR") + " às "
+      + quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+      + " · " + (r.resultado ? "pronto para revisar"
+               : transcrevendo ? "transformando em texto…" : "esperando sinal")));
+
+    const acoes = document.createElement("div");
+    acoes.className = "fila-acoes";
+    if (r.resultado) {
+      acoes.appendChild(filaBotao("Abrir", "Levar o texto para o formulário e revisar",
+        () => abreRascunho(r)));
+    }
+    acoes.appendChild(filaBotao("Ouvir", "Ouvir o áudio gravado", () => {
+      new Audio(URL.createObjectURL(r.audio)).play().catch(() => {});
+    }));
+    acoes.appendChild(filaBotao("Apagar", "Apagar este áudio", async () => {
+      if (!confirm("Apagar este relato por voz? O áudio não poderá ser recuperado.")) return;
+      await vozRemove(r.id).catch(() => {});
+      if (rascunhoAberto === r.id) rascunhoAberto = null;
+      desenhaRascunhos();
+    }));
+
+    const item = document.createElement("li");
+    item.className = "fila-item";
+    item.append(dados, acoes);
+    if (r.falha && !r.resultado) {
+      item.appendChild(filaLinha("fila-falha",
+        "Ainda não deu para transcrever — segue guardado e vai ser tentado de novo. ("
+        + r.falha.slice(0, 120) + ")"));
+    }
+    lista.appendChild(item);
+  }
+}
+
+/* Traz quem/quando gravados junto com o áudio e soma o texto. O rascunho
+   só é apagado quando o registro é salvo; até lá continua na lista. */
+function abreRascunho(r) {
+  if (!form.hidden) {
+    if (r.consultor) {
+      selConsultor.value = r.consultor;
+      selConsultor.dispatchEvent(new Event("change"));
+    }
+    if (r.produtor) {
+      selProdutor.value = r.produtor;
+      selProdutor.dispatchEvent(new Event("change"));
+    }
+    if (r.relator) $("relator").value = r.relator;
+    if (r.data_visita) $("data").value = r.data_visita;
+    if (r.talhao) $("talhao").value = r.talhao;
+    preencheComVoz(r.resultado);
+    rascunhoAberto = r.id;
+    vozAviso("Texto do áudio gravado em " + new Date(r.criado_em).toLocaleString("pt-BR")
+           + ". Confira os campos antes de salvar.");
+    $("rot-descricao").scrollIntoView({ block: "start", behavior: "smooth" });
+  } else {
+    $("btn-novo").click();
+    abreRascunho(r);
+  }
+}
+
 window.addEventListener("online",  tentaFila);
+window.addEventListener("online",  tentaRascunhos);
 window.addEventListener("offline", mostraFila);
 /* Em celular o "online" nem sempre chega: o aparelho recupera o sinal
    com a aba em segundo plano e não avisa ninguém. Voltar ao formulário
    é o outro momento em que vale tentar. */
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") tentaFila();
+  if (document.visibilityState === "visible") { tentaFila(); tentaRascunhos(); }
 });
 $("fila-tentar").addEventListener("click", tentaFila);
 tentaFila();
+tentaRascunhos();
 
 </script>
 
