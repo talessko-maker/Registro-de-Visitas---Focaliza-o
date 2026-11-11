@@ -284,6 +284,9 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
   cursor:pointer;
 }
 .pronto .dica{margin-top:12px;text-align:center}
+.com-acao{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:14px;color:var(--tinta-fraca);cursor:pointer;user-select:none}
+.com-acao input{width:19px;height:19px;margin:0;accent-color:var(--principal);cursor:pointer}
 .novo{
   min-height:52px;padding:0 26px;
   background:transparent;
@@ -569,6 +572,8 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
     <dl class="resumo" id="pronto-resumo"></dl>
     <div class="acoes">
       <button type="button" class="pdf" id="btn-pdf">Baixar o PDF de novo</button>
+      <label class="com-acao" id="rot-pdf-acao">
+        <input type="checkbox" id="pdf-acao"> com ação combinada</label>
       <button type="button" class="novo" id="btn-novo">Registrar outra visita</button>
     </div>
     <p class="dica">Precisa corrigir algo depois? Abra o <a href="/painel.html">Painel</a>,
@@ -869,6 +874,8 @@ form.addEventListener("submit", async e => {
   }
 
   ultimo = registro;
+  $("pdf-acao").checked = false;
+  $("rot-pdf-acao").hidden = !registro.acao;
   /* o relato por voz que virou este registro já está salvo nele */
   if (rascunhoAberto) {
     await vozRemove(rascunhoAberto).catch(() => {});
@@ -895,7 +902,7 @@ function baixa(registro) {
 }
 
 $("btn-pdf").addEventListener("click", () => {
-  if (ultimo) baixaPdf(ultimo);
+  if (ultimo) baixaPdf(ultimo, null, $("pdf-acao").checked);
 });
 
 /* --- registrar outra --- */

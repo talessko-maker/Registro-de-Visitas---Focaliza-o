@@ -144,7 +144,7 @@ function quebraEmLinhas(doc, trechos, largura) {
 }
 
 /* ------------------------------------------------------------------ */
-function gerarPdf(r) {
+function gerarPdf(r, comAcao) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
   registraFontes(doc);
@@ -276,8 +276,12 @@ function gerarPdf(r) {
   titulo("Descrição da visita");
   rico(r.descricao_html || (r.descricao ? escapaPdf(r.descricao) : ""));
 
-  /* A ação definida (e o prazo) fica só no sistema — página Ações —
-     e não sai no PDF que vai para o produtor. */
+  /* A ação definida (e o prazo) fica só no sistema — página Ações — e
+     só sai no PDF quando quem baixa marca a caixa "com ação combinada". */
+  if (comAcao) {
+    titulo(r.prazo_acao ? "Ação definida — prazo " + br(r.prazo_acao) : "Ação definida");
+    paragrafo(r.acao, "Nenhuma ação registrada.");
+  }
 
   /* ---------- situação do produtor ---------- */
   if (focalizacao && r.situacao) {
@@ -449,9 +453,9 @@ function entregaArquivo(blob, nome, semGesto) {
   });
 }
 
-function baixaPdf(r, semGesto) {
+function baixaPdf(r, semGesto, comAcao) {
   try {
-    entregaArquivo(gerarPdf(r).output("blob"), nomeArquivo(r, ".pdf"), semGesto);
+    entregaArquivo(gerarPdf(r, comAcao).output("blob"), nomeArquivo(r, ".pdf"), semGesto);
     return true;
   } catch (e) {
     console.error(e);

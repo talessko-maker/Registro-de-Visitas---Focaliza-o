@@ -221,6 +221,9 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 .pe{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:14px;border-top:1px solid var(--linha)}
 .aviso-pdf{font-size:13px;color:var(--alerta)}
+.com-acao{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;
+  color:var(--tinta-fraca);cursor:pointer;user-select:none}
+.com-acao input{width:17px;height:17px;margin:0;accent-color:var(--principal);cursor:pointer}
 
 /* ---------- correção da visita ---------- */
 .edicao .campo{margin-bottom:14px}
@@ -619,6 +622,8 @@ function cartao(v) {
 
     <div class="pe">
       <button type="button" class="leve pdf" data-id="${escapa(v.id)}">Baixar PDF</button>
+      ${(v.acao || "").trim() ? `<label class="com-acao">
+        <input type="checkbox" class="pdf-acao"> com ação combinada</label>` : ""}
       <button type="button" class="leve editar">Editar</button>
       <span class="aviso-pdf"></span>
     </div>
@@ -881,12 +886,22 @@ async function paraRelatorio(v) {
 
 const pdfsProntos = new Map();
 
+/* Mudou a caixa da ação: o PDF já pronto foi feito do outro jeito. */
+$("lista").addEventListener("change", e => {
+  if (!e.target.classList.contains("pdf-acao")) return;
+  const botao = e.target.closest(".pe").querySelector("button.pdf");
+  pdfsProntos.delete(botao.dataset.id);
+  botao.textContent = "Baixar PDF";
+});
+
 $("lista").addEventListener("click", async e => {
   const botao = e.target.closest("button.pdf");
   if (!botao) return;
 
   const visita = visitas.find(v => v.id === botao.dataset.id);
   const aviso = botao.parentElement.querySelector(".aviso-pdf");
+  const caixa = botao.parentElement.querySelector(".pdf-acao");
+  const comAcao = !!(caixa && caixa.checked);
   if (!visita) return;
 
   /* PDF já pronto esperando um toque novo para abrir o compartilhar. */
@@ -907,7 +922,7 @@ $("lista").addEventListener("click", async e => {
       pdfsProntos.set(visita.id, arquivo);
       botao.textContent = "Enviar PDF";
     };
-    if (!baixaPdf(registro, semGesto)) throw new Error("o PDF não pôde ser montado neste navegador");
+    if (!baixaPdf(registro, semGesto, comAcao)) throw new Error("o PDF não pôde ser montado neste navegador");
     if (perdidas) {
       aviso.textContent = perdidas === 1
         ? "1 foto não pôde ser carregada e ficou de fora"
