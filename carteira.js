@@ -78,7 +78,10 @@ const RELATORES = ["Yuri", "Guilherme", "Tales"];
    nome é o do vínculo de login (public.consultores.nome). Os outros
    admins continuam vendo todas as visitas no Painel, mas não a Gestão.
    ------------------------------------------------------------------- */
-const GESTORES = ["Tales", "Pedro Marcos"];
+/* "Pedrom": a conta do Pedro Marcos não está em banco/vinculos.sql, então
+   o nome dela vem do e-mail (pedrom@ -> "Pedrom"). Fica também "Pedro
+   Marcos" para o dia em que o vínculo ganhar o nome completo. */
+const GESTORES = ["Tales", "Pedro Marcos", "Pedrom"];
 
 /* -------------------------------------------------------------------
    3. SITUAÇÃO DO PRODUTOR

@@ -25,8 +25,10 @@ function esquece() {
 /* Marca no aparelho se quem entrou é gestor (admin e na lista GESTORES,
    em carteira.js): a barra mostra a aba Gestão só para eles. Devolve se é. */
 function marcaGestor(vinculo) {
+  /* compara sem maiúscula nem acento: "pedrom" = "Pedrom" */
+  const igual = t => (t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
   const sim = !!(vinculo && vinculo.admin && typeof GESTORES !== "undefined" &&
-                 GESTORES.includes(vinculo.nome));
+                 GESTORES.some(g => igual(g) === igual(vinculo.nome)));
   try {
     if (sim) localStorage.setItem("tb-gestor", "1");
     else localStorage.removeItem("tb-gestor");
