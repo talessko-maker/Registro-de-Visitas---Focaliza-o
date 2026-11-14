@@ -16,8 +16,9 @@
      próximo passo ............. ação combinada + prazo da ação
      evidência ................. quantidade de fotos (o formulário não
                                  grava GPS nem data da foto)
-     pontualidade .............. data da visita x hora em que o celular
-                                 fechou o registro (registrado_em)
+     pontualidade .............. DESLIGADA por enquanto (USAR_PONTUALIDADE);
+                                 quando ligada: data da visita x hora em que
+                                 o celular fechou o registro (registrado_em)
    Área (ha) não é pedida no formulário; no lugar dela a completude
    conta a cultura mencionada no texto.
 
@@ -26,14 +27,22 @@
    ponto, para servir de base a esse ajuste.
    =================================================================== */
 (function (raiz) {
+  /* Pontualidade desligada por enquanto (pedido de 14/11/2026). Para
+     religar, troque para true: ela volta a valer 5 pontos, a aparecer na
+     Gestão e a gerar a pendência de registrar até o dia seguinte. */
+  const USAR_PONTUALIDADE = false;
+
   const PESOS = {
     completude: 20,     // produtor, município, talhão, data, cultura (3 cada) + estádio (5)
     diagnostico: 25,    // problema identificado (10) + nível quantificado (15)
     recomendacao: 25,   // produto (8) + dose (9) + momento (8), ou "sem ação" justificada (25)
     evidencia: 15,      // 1 foto (12), 2 ou mais (15)
     encaminhamento: 10, // ação combinada com prazo
-    pontualidade: 5     // registro fechado até 24 h depois do dia da visita
+    ...(USAR_PONTUALIDADE ? { pontualidade: 5 } : {})  // registro fechado até 24 h depois do dia da visita
   };
+  /* A nota final é sempre de 0 a 100: a soma das partes ligadas é
+     convertida para essa escala (sem a pontualidade, o máximo é 95). */
+  const MAXIMO = Object.values(PESOS).reduce((a, b) => a + b, 0);
 
   const NOMES = {
     completude: "Completude", diagnostico: "Diagnóstico", recomendacao: "Recomendação",
@@ -266,13 +275,16 @@
       } else { nota.encaminhamento = 4; pendencias.push("Colocar prazo na ação combinada."); }
     } else pendencias.push("Registrar a ação combinada (próximo passo) com prazo.");
 
-    /* 6. Pontualidade (5) — horas depois do fim do dia da visita */
-    let horas = Infinity;
-    if (v.registrado_em && v.data_visita) {
-      horas = (Date.parse(v.registrado_em) - new Date(v.data_visita + "T23:59:59").getTime()) / 36e5;
+    /* 6. Pontualidade (5) — horas depois do fim do dia da visita.
+       Só conta com USAR_PONTUALIDADE ligado. */
+    if (USAR_PONTUALIDADE) {
+      let horas = Infinity;
+      if (v.registrado_em && v.data_visita) {
+        horas = (Date.parse(v.registrado_em) - new Date(v.data_visita + "T23:59:59").getTime()) / 36e5;
+      }
+      nota.pontualidade = horas <= 24 ? 5 : horas <= 48 ? 3 : 0;
+      if (horas > 24) pendencias.push("Registrar o relatório até o dia seguinte à visita.");
     }
-    nota.pontualidade = horas <= 24 ? 5 : horas <= 48 ? 3 : 0;
-    if (horas > 24) pendencias.push("Registrar o relatório até o dia seguinte à visita.");
 
     /* Trava: texto copiado */
     const meu = shingles(`${v.descricao || ""} ${v.acao || ""}`);
@@ -285,7 +297,7 @@
       alertas.push(`Texto ${Math.round(maxSim * 100)}% igual a um relatório anterior.`);
     }
 
-    let total = Object.values(nota).reduce((a, b) => a + b, 0);
+    let total = Math.round(100 * Object.values(nota).reduce((a, b) => a + b, 0) / MAXIMO);
     if (copiado) total = Math.min(total, 49);
     const { classe, rotulo } = CLASSES.find(c => total >= c.min);
 
@@ -326,13 +338,13 @@
       nota_media: Math.round(resultados.reduce((a, r) => a + r.nota, 0) / n),
       pct_A_B: pct(r => r.classe === "A" || r.classe === "B"),
       pct_D: pct(r => r.classe === "D"),
-      pct_no_prazo: pct(r => r.dimensoes.pontualidade === PESOS.pontualidade),
+      pct_no_prazo: USAR_PONTUALIDADE ? pct(r => r.dimensoes.pontualidade === PESOS.pontualidade) : null,
       com_alerta: resultados.filter(r => r.auditoria).length,
       classes: Object.fromEntries(CLASSES.map(c => [c.classe, resultados.filter(r => r.classe === c.classe).length]))
     };
   }
 
-  const API = { PESOS, NOMES, CLASSES, CONFIG, lerTexto, avaliar, avaliarTodas, resumo };
+  const API = { PESOS, NOMES, CLASSES, CONFIG, MAXIMO, USAR_PONTUALIDADE, lerTexto, avaliar, avaliarTodas, resumo };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else raiz.AVALIADOR = API;
 })(typeof window !== "undefined" ? window : globalThis);

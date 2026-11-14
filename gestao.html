@@ -435,7 +435,9 @@ table.regua td,table.regua th{vertical-align:top}
       <section class="cartao">
         <details>
           <summary style="cursor:pointer;font-weight:600;font-size:15px">Como a nota é calculada</summary>
-          <p class="explica" style="margin-top:8px">Pontua informação útil e verificável, nunca o
+          <p class="explica" style="margin-top:8px">As partes abaixo somam 95 pontos, e a nota é convertida
+            para a escala de 0 a 100 (a pontualidade do registro está fora da conta por enquanto).
+            Pontua informação útil e verificável, nunca o
             tamanho do texto. Vale para os dois formulários (Focalização e Terra Forte). O que o
             formulário não tem em campo próprio é lido do texto da descrição e da ação combinada.
             Avalia a qualidade do registro, não se a recomendação está agronomicamente correta.</p>
@@ -447,7 +449,7 @@ table.regua td,table.regua th{vertical-align:top}
               <tr><td>Recomendação</td><td class="n">25</td><td>Produto ou ativo (8; só a classe, como "fungicida", vale 4), dose por hectare (9) e momento ou prazo (8). Ou "sem necessidade de aplicação" justificado (25; sem justificativa, 10).</td></tr>
               <tr><td>Evidência</td><td class="n">15</td><td>1 foto (12); 2 ou mais (15).</td></tr>
               <tr><td>Encaminhamento</td><td class="n">10</td><td>Ação combinada com prazo de até 45 dias (10); prazo fora disso (6); sem prazo (4).</td></tr>
-              <tr><td>Pontualidade</td><td class="n">5</td><td>Registro fechado até o dia seguinte à visita (5); até dois dias depois (3).</td></tr>
+              <!-- Pontualidade (5): desligada por enquanto, ver USAR_PONTUALIDADE em avaliador.js -->
             </tbody>
           </table></div>
           <p class="explica" style="margin-top:10px"><b>Travas:</b> texto 80% ou mais igual a um
@@ -862,7 +864,7 @@ function desenhaQualidade(vs) {
     tile("Nota média", `${todos.nota_media} ${selo(media.classe)}`, `${num(todos.relatorios)} relatórios · ${media.rotulo.toLowerCase()}`) +
     tile("Relatórios A ou B", todos.pct_A_B + "%", "excelentes ou bons") +
     tile("Relatórios D", todos.pct_D + "%", "não sustentam decisão técnica", todos.pct_D >= 30 ? "atencao" : "") +
-    tile("Registrados no prazo", todos.pct_no_prazo + "%", "até o dia seguinte à visita") +
+    (AVALIADOR.USAR_PONTUALIDADE ? tile("Registrados no prazo", todos.pct_no_prazo + "%", "até o dia seguinte à visita") : "") +
     tile("Para auditar", num(todos.com_alerta), "relatórios com alerta", todos.com_alerta ? "atencao" : "");
 
   /* --- régua: distribuição das classes --- */
@@ -899,7 +901,7 @@ function desenhaQualidade(vs) {
   $("q-pessoas").innerHTML = `
     <table class="quadro">
       <thead><tr><th>Pessoa</th><th>Relatórios</th><th>Nota média</th><th>Classes (A · B · C · D)</th>
-        <th>No prazo</th><th>Para auditar</th></tr></thead>
+        ${AVALIADOR.USAR_PONTUALIDADE ? "<th>No prazo</th>" : ""}<th>Para auditar</th></tr></thead>
       <tbody>${linhas.map(l => {
         const c = classeDe(l.nota_media).classe;
         return `<tr class="clicavel" data-pessoa="${escapa(l.n)}" tabindex="0">
@@ -913,7 +915,7 @@ function desenhaQualidade(vs) {
               style="width:${100 * l.classes[k] / l.relatorios}%"
               data-dica="${escapa(l.n)} — classe ${k}: ${l.classes[k]} de ${l.relatorios}"></span>` : "").join("")}</div>
             <span class="n">${CLS.map(k => l.classes[k]).join(" · ")}</span></div></td>
-          <td class="n">${l.pct_no_prazo}%</td>
+          ${AVALIADOR.USAR_PONTUALIDADE ? `<td class="n">${l.pct_no_prazo}%</td>` : ""}
           <td class="n">${l.com_alerta ? `<span class="dias-alerta">${l.com_alerta}</span>` : 0}</td>
         </tr>`; }).join("")}</tbody>
     </table>`;
