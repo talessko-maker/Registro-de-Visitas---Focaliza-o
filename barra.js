@@ -94,6 +94,43 @@
       }
     }
   }
+  /* --- barra de baixo presa no fundo da tela ---
+     No iPhone (app instalado), depois que o teclado fecha o aparelho às
+     vezes continua com a tela "encolhida" e a barra fixa fica boiando
+     no meio, na altura onde o teclado estava. Aqui a barra se esconde
+     enquanto se digita e, depois, é empurrada de volta para o fundo de
+     verdade, medido pelo visualViewport. */
+  const ehCampo = el => el && (el.matches("input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select") || el.isContentEditable);
+  const vv = window.visualViewport;
+  function prende() {
+    if (!vv) return;
+    const desvio = Math.round(vv.offsetTop + vv.height - window.innerHeight);
+    const t = Math.abs(desvio) > 1 ? `translateY(${desvio}px)` : "";
+    baixo.style.transform = t;
+    folha.style.transform = t;
+  }
+  document.addEventListener("focusin", e => {
+    if (ehCampo(e.target)) document.body.classList.add("tb-digitando");
+  });
+  document.addEventListener("focusout", e => {
+    if (!ehCampo(e.target)) return;
+    setTimeout(() => {
+      if (ehCampo(document.activeElement)) return;   /* passou para outro campo */
+      document.body.classList.remove("tb-digitando");
+      /* um "toque" na rolagem faz o iPhone recalcular a tela */
+      window.scrollTo(window.scrollX, window.scrollY);
+      prende();
+      setTimeout(prende, 350);
+    }, 100);
+  });
+  if (vv) {
+    vv.addEventListener("resize", prende);
+    vv.addEventListener("scroll", prende);
+  }
+  window.addEventListener("scroll", prende, { passive: true });
+  window.addEventListener("pageshow", prende);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) prende(); });
+
   btnMais.addEventListener("click", () =>
     abre(!document.body.classList.contains("tb-aberto")));
   veu.addEventListener("click", () => abre(false));

@@ -97,6 +97,8 @@ header.tb p{margin:2px 0 0;font-size:12.5px;font-weight:400;color:#C3D8F2;line-h
     color:var(--tinta-fraca);text-decoration:none;cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
+  /* Enquanto o teclado está aberto a barra sai da frente (ver barra.js). */
+  body.tb-digitando .tb-baixo{display:none}
   .tb-baixo .ic{width:52px;height:30px;border-radius:15px;display:grid;place-items:center}
   .tb-baixo [aria-current="page"],.tb-baixo [aria-expanded="true"]{color:var(--principal);font-weight:600}
   .tb-baixo [aria-current="page"] .ic,.tb-baixo [aria-expanded="true"] .ic{background:var(--marcado)}
