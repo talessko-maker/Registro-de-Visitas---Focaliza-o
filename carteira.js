@@ -72,6 +72,15 @@ const CONSULTORES_SEM_CARTEIRA = ["Rodrigo"];
 const RELATORES = ["Yuri", "Guilherme", "Tales"];
 
 /* -------------------------------------------------------------------
+   2b. GESTÃO
+   Quem vê a página de Gestão (números da equipe e a nota de qualidade
+   dos relatórios). Precisa ser admin no banco E estar nesta lista; o
+   nome é o do vínculo de login (public.consultores.nome). Os outros
+   admins continuam vendo todas as visitas no Painel, mas não a Gestão.
+   ------------------------------------------------------------------- */
+const GESTORES = ["Tales", "Pedro Marcos"];
+
+/* -------------------------------------------------------------------
    3. SITUAÇÃO DO PRODUTOR
    id, rótulo, explicação curta (opcional). Marcada na página dos
    produtores focalizados; o PDF das visitas antigas também usa os

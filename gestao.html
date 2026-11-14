@@ -282,7 +282,7 @@ table.regua td,table.regua th{vertical-align:top}
     </form>
   </section>
 
-  <div class="vazio" id="so-admin" hidden>Esta página é só para administradores.
+  <div class="vazio" id="so-admin" hidden>Esta página é só para a gestão.
     Suas visitas, ações e produtores estão no <a href="/painel.html">Painel</a>,
     em <a href="/acoes.html">Ações</a> e em <a href="/produtores.html">Produtores</a>.</div>
 
@@ -534,7 +534,9 @@ async function mostraPagina() {
   try {
     const vinculo = await pede("/rest/v1/consultores?select=nome,admin");
     if (vinculo === null) return;
-    if (!vinculo[0] || !vinculo[0].admin) {
+    /* Só admin E da lista GESTORES (carteira.js): a nota de qualidade dos
+       relatórios e os números da equipe ficam com a gestão. */
+    if (!marcaGestor(vinculo[0])) {
       $("carregando").hidden = true;
       $("so-admin").hidden = false;
       return;

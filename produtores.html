@@ -343,6 +343,7 @@ async function mostraPagina() {
     const vinculo = await pede("/rest/v1/consultores?select=nome,admin");
     if (vinculo === null) return;           /* caiu no login */
     eu = vinculo[0] || null;
+    marcaGestor(eu);                         /* aba Gestão na barra só para gestores */
 
     $("carregando").hidden = true;
     $("pagina").hidden = false;

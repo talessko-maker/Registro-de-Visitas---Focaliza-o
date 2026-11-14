@@ -19,6 +19,20 @@ function guarda(s) {
 function esquece() {
   sessao = null;
   try { localStorage.removeItem(GUARDA); } catch (e) { console.warn(e); }
+  marcaGestor(null);
+}
+
+/* Marca no aparelho se quem entrou é gestor (admin e na lista GESTORES,
+   em carteira.js): a barra mostra a aba Gestão só para eles. Devolve se é. */
+function marcaGestor(vinculo) {
+  const sim = !!(vinculo && vinculo.admin && typeof GESTORES !== "undefined" &&
+                 GESTORES.includes(vinculo.nome));
+  try {
+    if (sim) localStorage.setItem("tb-gestor", "1");
+    else localStorage.removeItem("tb-gestor");
+  } catch (e) {}
+  window.dispatchEvent(new Event("tb-gestor"));
+  return sim;
 }
 
 function recupera() {

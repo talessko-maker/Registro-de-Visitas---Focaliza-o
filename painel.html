@@ -397,6 +397,9 @@ async function mostraPainel() {
   $("carregando").hidden = false;
   $("quem-entrou").textContent = sessao.email;
   $("sessao").hidden = false;
+  /* quem entrou: só para mostrar a aba Gestão na barra aos gestores */
+  pede("/rest/v1/consultores?select=nome,admin")
+    .then(v => { if (v) marcaGestor(v[0]); }).catch(() => {});
 
   try {
     const dados = await pede(

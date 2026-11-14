@@ -71,6 +71,17 @@ header.tb p{margin:2px 0 0;font-size:12.5px;font-weight:400;color:#C3D8F2;line-h
   outline:3px solid #9CC3F0;outline-offset:2px;
 }
 
+/* iPhone: o campo de data vazio passa da largura do cartão e fica sem
+   altura de texto. Vale para todas as páginas que carregam este arquivo. */
+input[type=date],input[type=time]{min-width:0;max-width:100%;box-sizing:border-box}
+@supports (-webkit-touch-callout:none){
+  input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-height:2.75em}
+}
+input::-webkit-date-and-time-value{text-align:left}
+
+/* Gestão: escondida para quem não é gestor (barra.js põe body.tb-gestor) */
+body:not(.tb-gestor) [data-restrito]{display:none!important}
+
 /* barra de baixo e folha do "Mais": só no celular */
 .tb-baixo,.tb-folha,.tb-veu{display:none}
 

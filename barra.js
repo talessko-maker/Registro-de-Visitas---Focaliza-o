@@ -32,6 +32,8 @@
     ["produtores", "/produtores.html", "Produtores", "Produtores", true],
     ["acoes",      "/acoes.html",      "Ações",      "Ações",      true],
     ["painel",     "/painel.html",     "Painel",     "Painel",     true],
+    /* Gestão: só aparece para quem está em GESTORES (carteira.js); a marca
+       é posta por sessao.js depois do login. */
     ["gestao",     "/gestao.html",     "Gestão",     "Gestão",     false],
     ["mip",        "/mip-semente.html#ocorrencia-semente",
                    "MIP · Ocorrência – Semente de Soja", "MIP · Ocorrência – Semente de Soja", false]
@@ -40,7 +42,7 @@
   const header = document.querySelector("header.tb");
   if (!header) return;
   const atual = header.dataset.pagina;
-  const marca = id => id === atual ? ' aria-current="page"' : "";
+  const marca = id => (id === atual ? ' aria-current="page"' : "") + (id === "gestao" ? " data-restrito" : "");
 
   /* --- PC: abas --- */
   const abas = header.querySelector(".tb-abas");
@@ -79,6 +81,17 @@
 
   header.after(baixo, veu, folha);
 
+  /* Gestão só para os gestores: a marca fica no aparelho depois do login
+     (sessao.js, marcaGestor) e some quando a pessoa sai. */
+  function aplicaGestor() {
+    let sim = false;
+    try { sim = localStorage.getItem("tb-gestor") === "1"; } catch (e) {}
+    document.body.classList.toggle("tb-gestor", sim);
+  }
+  aplicaGestor();
+  window.addEventListener("tb-gestor", aplicaGestor);
+  window.addEventListener("storage", e => { if (e.key === "tb-gestor") aplicaGestor(); });
+
   const btnMais = baixo.querySelector("#tb-mais");
   function abre(sim) {
     document.body.classList.toggle("tb-aberto", sim);
@@ -99,11 +112,13 @@
      da tela, por exemplo depois que o teclado fecha: o aparelho continua
      informando uma tela menor do que a real. Por isso aqui não se confia
      só na altura que ele informa:
-     1. mede onde a barra está de fato e onde fica o fundo visível;
-     2. no app instalado, o fundo é no mínimo a altura de tela cheia
-        (100lvh), que não encolhe com o teclado;
-     3. empurra a barra a diferença e a redesenha quando o teclado fecha
+     1. mede onde a barra está de fato e onde fica o fundo visível
+        (visualViewport);
+     2. empurra a barra a diferença e a redesenha quando o teclado fecha
         ou o app volta do segundo plano.
+     Não usar a altura de tela cheia (100lvh) como fundo: no app instalado
+     a página começa abaixo da barra de status, e a barra de baixo ficava
+     "engolida" pela borda da tela.
      Enquanto se digita a barra sai da frente (barra.css).
      Diagnóstico: abra qualquer página com ?diag=1 no endereço para ver
      os números na tela (?diag=0 desliga). */
@@ -134,9 +149,8 @@
     if (getComputedStyle(baixo).display === "none" || digitando()) return;
     const fundoBarra = baixo.getBoundingClientRect().bottom;
     const fundoVv = vv ? vv.offsetTop + vv.height : window.innerHeight;
-    const lvh = sonda.getBoundingClientRect().height;
-    const alvo = instalado ? Math.max(fundoVv, lvh) : fundoVv;
-    const desvio = Math.round(alvo - fundoBarra);
+    const lvh = sonda.getBoundingClientRect().height;   /* só para o diagnóstico */
+    const desvio = Math.round(fundoVv - fundoBarra);
     if (Math.abs(desvio) > 1) {
       const t = `translateY(${desvio}px)`;
       baixo.style.transform = t;
