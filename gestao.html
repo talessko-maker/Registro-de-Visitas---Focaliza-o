@@ -172,6 +172,64 @@ table.lista td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
   padding:7px 10px;border-radius:8px;max-width:260px;
   box-shadow:0 4px 14px rgba(0,0,0,.18);
 }
+/* ---------- abas da gestão ---------- */
+.abas-g{display:flex;gap:4px;background:#fff;border:1px solid var(--linha);border-radius:12px;
+  padding:4px;margin-bottom:16px;width:max-content;max-width:100%;overflow-x:auto}
+.abas-g button{background:none;color:var(--tinta-fraca);font-weight:500;font-size:14.5px;
+  padding:8px 16px;border-radius:9px;white-space:nowrap}
+.abas-g button[aria-selected="true"]{background:var(--principal);color:#fff;font-weight:600}
+.abas-g button:focus-visible{outline:2.5px solid var(--apoio);outline-offset:2px}
+
+/* ---------- qualidade dos relatórios ----------
+   Classes A→D numa escala azul→vermelho (validada para daltonismo);
+   a letra vai sempre escrita junto, a cor nunca fica sozinha. */
+:root{--cA:#1d5fb0;--cB:#6aa2df;--cC:#ea8a5e;--cD:#b83330}
+.classe{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 6px;
+  border-radius:6px;font-size:12.5px;font-weight:700;line-height:1}
+.classe.A{background:var(--cA);color:#fff}.classe.B{background:var(--cB);color:var(--tinta)}
+.classe.C{background:var(--cC);color:var(--tinta)}.classe.D{background:var(--cD);color:#fff}
+.nota-n{font-variant-numeric:tabular-nums;font-weight:600}
+.dist{display:flex;gap:2px;height:28px;border-radius:0 6px 6px 0;overflow:hidden;margin:4px 0 10px}
+.dist span{height:100%;display:grid;place-items:center;font-size:12px;font-weight:700;min-width:2px}
+.dist span:hover,.dist span:focus{filter:brightness(1.12)}
+.dist .A{background:var(--cA);color:#fff}.dist .B{background:var(--cB);color:var(--tinta)}
+.dist .C{background:var(--cC);color:var(--tinta)}.dist .D{background:var(--cD);color:#fff}
+.pilha .A{background:var(--cA)}.pilha .B{background:var(--cB)}.pilha .C{background:var(--cC)}.pilha .D{background:var(--cD)}
+.trilho .preenche.nota{background:var(--serie)}
+table.quadro tr.clicavel{cursor:pointer}
+table.quadro tr.clicavel:hover td{background:var(--marcado)}
+.filtros-rel{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:0 0 12px}
+.filtros-rel>div{flex:0 1 200px;min-width:150px}
+.filtros-rel label.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tinta);margin:0 0 10px}
+.filtros-rel label.check input{width:18px;height:18px}
+.rel{border-top:1px solid var(--grade)}
+.rel>summary{list-style:none;cursor:pointer;display:grid;
+  grid-template-columns:86px minmax(0,1.4fr) minmax(0,1fr) 92px 70px 20px;gap:10px;align-items:center;
+  padding:10px 4px;font-size:13.5px}
+.rel>summary::-webkit-details-marker{display:none}
+.rel>summary:hover{background:var(--marcado)}
+.rel>summary .prod{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rel>summary .quem,.rel>summary .orig{color:var(--tinta-fraca);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rel>summary .nt{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.rel>summary .seta{width:8px;height:8px;border-right:2px solid var(--tinta-muda);border-bottom:2px solid var(--tinta-muda);transform:rotate(45deg);margin-top:-4px}
+.rel[open]>summary .seta{transform:rotate(225deg);margin-top:4px}
+.rel .alerta-ic{color:var(--alerta);font-weight:700}
+.rel-corpo{padding:4px 4px 16px;font-size:13.5px}
+.dims{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.dim{border:1px solid var(--grade);border-radius:10px;padding:8px 10px}
+.dim b{display:block;font-size:12px;font-weight:500;color:var(--tinta-fraca)}
+.dim .v{font-variant-numeric:tabular-nums;font-weight:600}
+.dim .trilho{height:6px;margin-top:6px}
+.rel-corpo h4{font-size:13px;margin:10px 0 4px}
+.rel-corpo ul{margin:0;padding-left:18px}
+.rel-corpo li{margin:2px 0}
+.rel-corpo .txt{background:var(--fundo);border-radius:8px;padding:8px 10px;color:var(--tinta);white-space:pre-wrap;max-height:180px;overflow:auto}
+.mais{margin-top:12px;background:#fff;color:var(--principal);border:1px solid var(--linha)}
+table.regua td,table.regua th{vertical-align:top}
+@media (max-width:640px){
+  .rel>summary{grid-template-columns:72px minmax(0,1fr) 70px 16px}
+  .rel>summary .quem,.rel>summary .orig{display:none}
+}
 .recarregando{opacity:.55;transition:opacity .15s}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -230,6 +288,11 @@ table.lista td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 
   <!-- ================= PÁGINA ================= -->
   <section id="pagina" hidden>
+
+    <div class="abas-g" role="tablist" aria-label="Visões da gestão">
+      <button type="button" role="tab" id="aba-geral" aria-selected="true" aria-controls="conteudo">Visão geral</button>
+      <button type="button" role="tab" id="aba-qualidade" aria-selected="false" aria-controls="qualidade">Qualidade dos relatórios</button>
+    </div>
 
     <div class="filtros">
       <div>
@@ -309,6 +372,90 @@ table.lista td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
         </section>
       </div>
     </div>
+
+    <!-- ================= QUALIDADE DOS RELATÓRIOS ================= -->
+    <div id="qualidade" role="tabpanel" aria-labelledby="aba-qualidade" hidden>
+      <div class="tiles" id="q-tiles"></div>
+
+      <div class="grade2">
+        <section class="cartao">
+          <h2>Régua: como estão os relatórios</h2>
+          <p class="explica">Quantos relatórios do período caíram em cada classe.
+            A 85–100 · B 70–84 · C 50–69 · D 0–49.</p>
+          <div id="q-dist"></div>
+        </section>
+        <section class="cartao">
+          <h2>Onde se perde ponto</h2>
+          <p class="explica">Média que os relatórios do período tiram em cada parte da nota,
+            em relação ao máximo. As barras mais curtas são o que mais falta registrar.</p>
+          <div id="q-dims"></div>
+        </section>
+      </div>
+
+      <section class="cartao">
+        <h2>Nota por pessoa</h2>
+        <p class="explica">Quem fez o relatório: o "Relatório feito por", quando preenchido;
+          senão, o consultor da visita. Toque numa linha para ver os relatórios da pessoa.</p>
+        <p class="legenda">
+          <span><i style="background:var(--cA)"></i>A</span>
+          <span><i style="background:var(--cB)"></i>B</span>
+          <span><i style="background:var(--cC)"></i>C</span>
+          <span><i style="background:var(--cD)"></i>D</span>
+        </p>
+        <div class="rolagem" id="q-pessoas"></div>
+      </section>
+
+      <section class="cartao" id="q-lista-cartao">
+        <h2>Nota de cada relatório</h2>
+        <p class="explica">Abra um relatório para ver a nota de cada parte, o que faltou e os
+          alertas para auditoria.</p>
+        <div class="filtros-rel">
+          <div>
+            <label for="q-pessoa">Pessoa</label>
+            <select id="q-pessoa"><option value="">Todas</option></select>
+          </div>
+          <div>
+            <label for="q-classe">Classe</label>
+            <select id="q-classe">
+              <option value="">Todas</option>
+              <option value="A">A — Excelente</option>
+              <option value="B">B — Bom</option>
+              <option value="C">C — Regular</option>
+              <option value="D">D — Insuficiente</option>
+            </select>
+          </div>
+          <div>
+            <label class="check"><input type="checkbox" id="q-alerta"> Só com alerta</label>
+          </div>
+        </div>
+        <div id="q-lista"></div>
+      </section>
+
+      <section class="cartao">
+        <details>
+          <summary style="cursor:pointer;font-weight:600;font-size:15px">Como a nota é calculada</summary>
+          <p class="explica" style="margin-top:8px">Pontua informação útil e verificável, nunca o
+            tamanho do texto. Vale para os dois formulários (Focalização e Terra Forte). O que o
+            formulário não tem em campo próprio é lido do texto da descrição e da ação combinada.
+            Avalia a qualidade do registro, não se a recomendação está agronomicamente correta.</p>
+          <div class="rolagem"><table class="lista regua">
+            <thead><tr><th>Parte</th><th>Pts</th><th>O que pontua</th></tr></thead>
+            <tbody>
+              <tr><td>Completude</td><td class="n">20</td><td>Produtor, município, talhão, data e cultura citada no texto (3 cada); estádio fenológico no texto (5; fora da escala da cultura vale 2 e gera alerta).</td></tr>
+              <tr><td>Diagnóstico</td><td class="n">25</td><td>Problema identificado — praga, doença, daninha, nutrição, clima ou estande — (10) e nível com número ou escala (15). Nível vago ("alta", "leve") vale 5. "Sem ocorrência" também é diagnóstico.</td></tr>
+              <tr><td>Recomendação</td><td class="n">25</td><td>Produto ou ativo (8; só a classe, como "fungicida", vale 4), dose por hectare (9) e momento ou prazo (8). Ou "sem necessidade de aplicação" justificado (25; sem justificativa, 10).</td></tr>
+              <tr><td>Evidência</td><td class="n">15</td><td>1 foto (12); 2 ou mais (15).</td></tr>
+              <tr><td>Encaminhamento</td><td class="n">10</td><td>Ação combinada com prazo de até 45 dias (10); prazo fora disso (6); sem prazo (4).</td></tr>
+              <tr><td>Pontualidade</td><td class="n">5</td><td>Registro fechado até o dia seguinte à visita (5); até dois dias depois (3).</td></tr>
+            </tbody>
+          </table></div>
+          <p class="explica" style="margin-top:10px"><b>Travas:</b> texto 80% ou mais igual a um
+            relatório anterior da mesma pessoa zera diagnóstico e recomendação e limita a nota a 49.
+            Texto genérico ("tudo ok", "lavoura bonita") sem nenhum alvo ou número zera o diagnóstico.
+            Produto recomendado sem problema diagnosticado vale metade e gera alerta.</p>
+        </details>
+      </section>
+    </div>
   </section>
 
   <div class="carregando" id="carregando" hidden>Carregando…</div>
@@ -318,6 +465,7 @@ table.lista td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
 
 <script src="/carteira.js"></script>
 <script src="/sessao.js"></script>
+<script src="/avaliador.js"></script>
 
 <script>
 /* ===================================================================
@@ -336,6 +484,8 @@ const $ = id => document.getElementById(id);
 let visitas = [];      /* todas as visitas */
 let marcas = {};       /* visita_id -> cumprida (a marcação mais recente) */
 let situacao = {};     /* consultor|produtor -> situação atual */
+let notas = new Map(); /* visita_id -> avaliação de qualidade (avaliador.js) */
+let qMostrar = 50;     /* quantos relatórios a lista mostra antes do "Mostrar mais" */
 
 const hoje = (() => {
   const d = new Date();
@@ -362,7 +512,7 @@ const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov"
    =================================================================== */
 function mostraLogin(aviso) {
   esquece();
-  visitas = []; marcas = {}; situacao = {};
+  visitas = []; marcas = {}; situacao = {}; notas = new Map();
   $("pagina").hidden = true;
   $("so-admin").hidden = true;
   $("carregando").hidden = true;
@@ -400,7 +550,7 @@ async function mostraPagina() {
     };
     const [vs, ms, ss] = await Promise.all([
       pede("/rest/v1/visitas?select=id,origem,consultor,produtor,municipio,data_visita," +
-           "acao,prazo_acao,extras,registrado_em&order=data_visita.desc&limit=10000"),
+           "descricao,acao,prazo_acao,fotos,extras,registrado_em&order=data_visita.desc&limit=10000"),
       pede("/rest/v1/acao_cumprida?select=visita_id,cumprida,alterado_em" +
            "&order=alterado_em.desc&limit=20000").catch(avisa("as ações cumpridas")),
       pede("/rest/v1/situacao_produtor?select=consultor,produtor,situacao,alterado_em" +
@@ -409,6 +559,10 @@ async function mostraPagina() {
     if (vs === null || ms === null || ss === null) return;
 
     visitas = vs;
+    /* Nota de qualidade de cada relatório, uma vez só: a trava de texto
+       copiado compara com os anteriores da mesma pessoa em toda a
+       história, não só no período escolhido. */
+    notas = AVALIADOR.avaliarTodas(visitas, autor);
     marcas = {};
     for (const m of ms) if (!(m.visita_id in marcas)) marcas[m.visita_id] = m.cumprida;
 
@@ -478,6 +632,7 @@ function desenha() {
   desenhaQuadro(vs);
   desenhaSituacao();
   desenhaEsquecidos();
+  desenhaQualidade(vs);
 }
 
 /* --- números-chave --- */
@@ -675,6 +830,140 @@ function desenhaEsquecidos() {
 }
 
 /* ===================================================================
+   4b. QUALIDADE DOS RELATÓRIOS — nota de 0 a 100 de cada relatório
+   (avaliador.js, a partir do 5W2H) e o consolidado por pessoa.
+   =================================================================== */
+const DIMS = Object.keys(AVALIADOR.PESOS);
+const CLS = AVALIADOR.CLASSES.map(c => c.classe);
+const classeDe = n => AVALIADOR.CLASSES.find(c => n >= c.min);
+const selo = c => `<span class="classe ${c}">${c}</span>`;
+const ORIGEM = { "focalizacao": "Focalização", "terra-forte": "Terra Forte" };
+
+function desenhaQualidade(vs) {
+  const lista = vs.map(v => ({ v, r: notas.get(v.id) })).filter(x => x.r);
+  const todos = AVALIADOR.resumo(lista.map(x => x.r));
+
+  /* --- números-chave --- */
+  const tile = (rotulo, valor, sub, classe = "") => `
+    <div class="tile ${classe}"><p class="rotulo">${rotulo}</p>
+      <p class="valor">${valor}</p><p class="sub">${sub}</p></div>`;
+  if (!lista.length) {
+    $("q-tiles").innerHTML = "";
+    $("q-dist").innerHTML = $("q-dims").innerHTML = $("q-pessoas").innerHTML =
+      `<div class="vazio">Nenhum relatório no período.</div>`;
+    $("q-lista").innerHTML = "";
+    return;
+  }
+  const media = classeDe(todos.nota_media);
+  $("q-tiles").innerHTML =
+    tile("Nota média", `${todos.nota_media} ${selo(media.classe)}`, `${num(todos.relatorios)} relatórios · ${media.rotulo.toLowerCase()}`) +
+    tile("Relatórios A ou B", todos.pct_A_B + "%", "excelentes ou bons") +
+    tile("Relatórios D", todos.pct_D + "%", "não sustentam decisão técnica", todos.pct_D >= 30 ? "atencao" : "") +
+    tile("Registrados no prazo", todos.pct_no_prazo + "%", "até o dia seguinte à visita") +
+    tile("Para auditar", num(todos.com_alerta), "relatórios com alerta", todos.com_alerta ? "atencao" : "");
+
+  /* --- régua: distribuição das classes --- */
+  const total = lista.length;
+  $("q-dist").innerHTML = `
+    <div class="dist" role="img" aria-label="Distribuição das classes">
+      ${CLS.map(c => todos.classes[c] ? `<span class="${c}" tabindex="0"
+          style="width:${100 * todos.classes[c] / total}%"
+          data-dica="Classe ${c}: ${todos.classes[c]} de ${total} relatórios (${pct(todos.classes[c], total)}%)">${
+          100 * todos.classes[c] / total >= 7 ? c : ""}</span>` : "").join("")}
+    </div>
+    <table class="lista"><thead><tr><th>Classe</th><th>Nota</th><th>Relatórios</th><th>%</th></tr></thead><tbody>
+      ${AVALIADOR.CLASSES.map((c, i) => `<tr><td>${selo(c.classe)} ${c.rotulo}</td>
+        <td class="n">${c.min}–${i ? AVALIADOR.CLASSES[i - 1].min - 1 : 100}</td>
+        <td class="n">${todos.classes[c.classe]}</td><td class="n">${pct(todos.classes[c.classe], total)}%</td></tr>`).join("")}
+    </tbody></table>`;
+
+  /* --- onde se perde ponto: média de cada dimensão / máximo --- */
+  const medDim = d => lista.reduce((a, x) => a + x.r.dimensoes[d], 0) / total;
+  $("q-dims").innerHTML = `<div class="hbarras">${DIMS.map(d => {
+      const m = medDim(d), max = AVALIADOR.PESOS[d];
+      const txt = m.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+      return `<div class="hlinha">
+        <span class="nome">${AVALIADOR.NOMES[d]}</span>
+        <div class="trilho" tabindex="0" data-dica="${AVALIADOR.NOMES[d]}: média ${txt} de ${max} pontos (${pct(m, max)}%)">
+          <div class="preenche" style="width:${100 * m / max}%"></div></div>
+        <span class="valor">${txt}/${max}</span></div>`; }).join("")}</div>`;
+
+  /* --- nota por pessoa --- */
+  const porPessoa = {};
+  for (const x of lista) (porPessoa[autor(x.v)] ||= []).push(x.r);
+  const linhas = Object.entries(porPessoa).map(([n, rs]) => ({ n, ...AVALIADOR.resumo(rs) }))
+    .sort((a, b) => b.nota_media - a.nota_media || b.relatorios - a.relatorios || a.n.localeCompare(b.n, "pt-BR"));
+  $("q-pessoas").innerHTML = `
+    <table class="quadro">
+      <thead><tr><th>Pessoa</th><th>Relatórios</th><th>Nota média</th><th>Classes (A · B · C · D)</th>
+        <th>No prazo</th><th>Para auditar</th></tr></thead>
+      <tbody>${linhas.map(l => {
+        const c = classeDe(l.nota_media).classe;
+        return `<tr class="clicavel" data-pessoa="${escapa(l.n)}" tabindex="0">
+          <td>${escapa(l.n)}</td>
+          <td class="n">${l.relatorios}</td>
+          <td><div class="mini">
+            <div class="trilho" data-dica="${escapa(l.n)}: nota média ${l.nota_media} de 100">
+              <div class="preenche" style="width:${l.nota_media}%"></div></div>
+            <span class="nota-n">${l.nota_media}</span>${selo(c)}</div></td>
+          <td><div class="mini"><div class="pilha">${CLS.map(k => l.classes[k] ? `<span class="${k}" tabindex="0"
+              style="width:${100 * l.classes[k] / l.relatorios}%"
+              data-dica="${escapa(l.n)} — classe ${k}: ${l.classes[k]} de ${l.relatorios}"></span>` : "").join("")}</div>
+            <span class="n">${CLS.map(k => l.classes[k]).join(" · ")}</span></div></td>
+          <td class="n">${l.pct_no_prazo}%</td>
+          <td class="n">${l.com_alerta ? `<span class="dias-alerta">${l.com_alerta}</span>` : 0}</td>
+        </tr>`; }).join("")}</tbody>
+    </table>`;
+
+  /* --- filtro de pessoa da lista: mantém a escolha se ela ainda existe --- */
+  const sel = $("q-pessoa"), atual = sel.value;
+  sel.innerHTML = `<option value="">Todas</option>` + linhas.map(l => l.n)
+    .sort((a, b) => a.localeCompare(b, "pt-BR"))
+    .map(n => `<option value="${escapa(n)}">${escapa(n)}</option>`).join("");
+  sel.value = linhas.some(l => l.n === atual) ? atual : "";
+
+  desenhaListaRelatorios(lista);
+}
+
+let qLista = [];
+function desenhaListaRelatorios(lista) {
+  if (lista) qLista = lista;
+  const pessoa = $("q-pessoa").value, classe = $("q-classe").value, soAlerta = $("q-alerta").checked;
+  const filtrada = qLista.filter(x =>
+    (!pessoa || autor(x.v) === pessoa) && (!classe || x.r.classe === classe) && (!soAlerta || x.r.auditoria));
+  if (!filtrada.length) { $("q-lista").innerHTML = `<div class="vazio">Nenhum relatório com esses filtros.</div>`; return; }
+
+  const mostra = filtrada.slice(0, qMostrar);
+  $("q-lista").innerHTML = mostra.map(({ v, r }) => `
+    <details class="rel">
+      <summary>
+        <span class="n">${br(v.data_visita)}</span>
+        <span class="prod" title="${escapa(v.produtor)}">${escapa(v.produtor)}</span>
+        <span class="quem">${escapa(autor(v))}</span>
+        <span class="orig">${ORIGEM[v.origem] || escapa(v.origem)}</span>
+        <span class="nt">${r.auditoria ? `<span class="alerta-ic" title="Tem alerta para auditoria">!</span>` : ""}
+          <span class="nota-n">${r.nota}</span>${selo(r.classe)}</span>
+        <span class="seta" aria-hidden="true"></span>
+      </summary>
+      <div class="rel-corpo">
+        <div class="dims">${DIMS.map(d => `<div class="dim"><b>${AVALIADOR.NOMES[d]}</b>
+          <span class="v">${r.dimensoes[d]}</span> de ${AVALIADOR.PESOS[d]}
+          <div class="trilho"><div class="preenche" style="width:${100 * r.dimensoes[d] / AVALIADOR.PESOS[d]}%"></div></div></div>`).join("")}</div>
+        ${r.alertas.length ? `<h4 style="color:var(--alerta)">Alertas para auditoria</h4><ul>${r.alertas.map(a => `<li>${escapa(a)}</li>`).join("")}</ul>` : ""}
+        ${r.pendencias.length ? `<h4>O que faltou</h4><ul>${r.pendencias.map(p => `<li>${escapa(p)}</li>`).join("")}</ul>`
+                              : `<h4>Nada faltou.</h4>`}
+        <h4>Consultor · Formulário</h4><p style="margin:0">${escapa(v.consultor)} · ${ORIGEM[v.origem] || escapa(v.origem)}${
+          (v.extras || {}).talhao ? ` · Talhão ${escapa(v.extras.talhao)}` : ""}</p>
+        <h4>Descrição</h4><div class="txt">${escapa(v.descricao || "—")}</div>
+        ${(v.acao || "").trim() ? `<h4>Ação combinada${v.prazo_acao ? ` · prazo ${br(v.prazo_acao)}` : ""}</h4><div class="txt">${escapa(v.acao)}</div>` : ""}
+      </div>
+    </details>`).join("") +
+    (filtrada.length > qMostrar
+      ? `<button type="button" class="mais" id="q-mais">Mostrar mais (${filtrada.length - qMostrar} restantes)</button>` : "") +
+    `<p class="explica" style="margin:10px 0 0">${filtrada.length} ${filtrada.length === 1 ? "relatório" : "relatórios"}, do mais recente ao mais antigo.</p>`;
+}
+
+/* ===================================================================
    5. DICA FLUTUANTE — a mesma para todos os gráficos, no mouse e no
    teclado. Ela só repete o que está escrito ao lado ou na tabela.
    =================================================================== */
@@ -712,6 +1001,41 @@ $("f-periodo").addEventListener("change", () => {
   desenha();
 });
 ["f-de", "f-ate", "f-origem"].forEach(id => $(id).addEventListener("change", desenha));
+
+/* --- abas: a escolhida fica no endereço (#qualidade) --- */
+function mostraAba(qual) {
+  const q = qual === "qualidade";
+  $("aba-geral").setAttribute("aria-selected", String(!q));
+  $("aba-qualidade").setAttribute("aria-selected", String(q));
+  $("conteudo").hidden = q;
+  $("qualidade").hidden = !q;
+  history.replaceState(null, "", q ? "#qualidade" : location.pathname + location.search);
+}
+$("aba-geral").addEventListener("click", () => mostraAba("geral"));
+$("aba-qualidade").addEventListener("click", () => mostraAba("qualidade"));
+mostraAba(location.hash === "#qualidade" ? "qualidade" : "geral");
+
+/* --- lista de relatórios --- */
+["q-pessoa", "q-classe", "q-alerta"].forEach(id => $(id).addEventListener("change", () => {
+  qMostrar = 50; desenhaListaRelatorios();
+}));
+$("q-lista").addEventListener("click", e => {
+  if (e.target.id === "q-mais") { qMostrar += 50; desenhaListaRelatorios(); }
+});
+/* tocar numa pessoa filtra a lista por ela */
+function escolhePessoa(tr) {
+  $("q-pessoa").value = tr.dataset.pessoa;
+  qMostrar = 50;
+  desenhaListaRelatorios();
+  $("q-lista-cartao").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("q-pessoas").addEventListener("click", e => {
+  const tr = e.target.closest("tr[data-pessoa]"); if (tr) escolhePessoa(tr);
+});
+$("q-pessoas").addEventListener("keydown", e => {
+  const tr = e.target.closest("tr[data-pessoa]");
+  if (tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); escolhePessoa(tr); }
+});
 
 $("form-login").addEventListener("submit", async e => {
   e.preventDefault();
