@@ -94,23 +94,75 @@
       }
     }
   }
-  /* --- barra de baixo presa no fundo da tela ---
-     No iPhone (app instalado), depois que o teclado fecha o aparelho às
-     vezes continua com a tela "encolhida" e a barra fixa fica boiando
-     no meio, na altura onde o teclado estava. Aqui a barra se esconde
-     enquanto se digita e, depois, é empurrada de volta para o fundo de
-     verdade, medido pelo visualViewport. */
+  /* --- barra de baixo travada no fundo da tela ---
+     No iPhone (app instalado) a barra fixa às vezes fica boiando no meio
+     da tela, por exemplo depois que o teclado fecha: o aparelho continua
+     informando uma tela menor do que a real. Por isso aqui não se confia
+     só na altura que ele informa:
+     1. mede onde a barra está de fato e onde fica o fundo visível;
+     2. no app instalado, o fundo é no mínimo a altura de tela cheia
+        (100lvh), que não encolhe com o teclado;
+     3. empurra a barra a diferença e a redesenha quando o teclado fecha
+        ou o app volta do segundo plano.
+     Enquanto se digita a barra sai da frente (barra.css).
+     Diagnóstico: abra qualquer página com ?diag=1 no endereço para ver
+     os números na tela (?diag=0 desliga). */
   const ehCampo = el => el && (el.matches("input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]),textarea,select") || el.isContentEditable);
   const vv = window.visualViewport;
+  const instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const sonda = document.createElement("div");
+  sonda.setAttribute("aria-hidden", "true");
+  sonda.style.cssText = "position:fixed;top:0;left:0;width:1px;height:100lvh;visibility:hidden;pointer-events:none;z-index:-1";
+  document.body.appendChild(sonda);
+  const digitando = () => document.body.classList.contains("tb-digitando");
+
+  let diag = null;
+  try {
+    const q = new URLSearchParams(location.search).get("diag");
+    if (q === "1") localStorage.setItem("tb-diag", "1");
+    if (q === "0") localStorage.removeItem("tb-diag");
+    if (localStorage.getItem("tb-diag") === "1") {
+      diag = document.createElement("pre");
+      diag.style.cssText = "position:fixed;top:calc(8px + env(safe-area-inset-top));left:8px;z-index:9999;margin:0;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.78);color:#fff;font:11px/1.35 ui-monospace,monospace;pointer-events:none;white-space:pre";
+      document.body.appendChild(diag);
+    }
+  } catch (e) {}
+
   function prende() {
-    if (!vv) return;
-    const desvio = Math.round(vv.offsetTop + vv.height - window.innerHeight);
-    const t = Math.abs(desvio) > 1 ? `translateY(${desvio}px)` : "";
-    baixo.style.transform = t;
-    folha.style.transform = t;
+    baixo.style.transform = "";
+    folha.style.transform = "";
+    if (getComputedStyle(baixo).display === "none" || digitando()) return;
+    const fundoBarra = baixo.getBoundingClientRect().bottom;
+    const fundoVv = vv ? vv.offsetTop + vv.height : window.innerHeight;
+    const lvh = sonda.getBoundingClientRect().height;
+    const alvo = instalado ? Math.max(fundoVv, lvh) : fundoVv;
+    const desvio = Math.round(alvo - fundoBarra);
+    if (Math.abs(desvio) > 1) {
+      const t = `translateY(${desvio}px)`;
+      baixo.style.transform = t;
+      folha.style.transform = t;
+    }
+    if (diag) diag.textContent =
+      `app instalado: ${instalado ? "sim" : "não"}\n` +
+      `innerHeight:   ${window.innerHeight}\n` +
+      `visual:        ${vv ? Math.round(vv.height) + " (topo " + Math.round(vv.offsetTop) + ")" : "-"}\n` +
+      `100lvh:        ${Math.round(lvh)}\n` +
+      `tela:          ${screen.height}\n` +
+      `barra fundo:   ${Math.round(fundoBarra)}\n` +
+      `correção:      ${Math.abs(desvio) > 1 ? desvio : 0}`;
+  }
+  /* Tira e põe a barra para o iPhone redesenhar a posição dela. */
+  function redesenha() {
+    baixo.style.display = "none";
+    void baixo.offsetHeight;
+    baixo.style.display = "";
+    prende();
+    requestAnimationFrame(prende);
+    setTimeout(prende, 350);
+    setTimeout(prende, 900);
   }
   document.addEventListener("focusin", e => {
-    if (ehCampo(e.target)) document.body.classList.add("tb-digitando");
+    if (ehCampo(e.target)) { document.body.classList.add("tb-digitando"); prende(); }
   });
   document.addEventListener("focusout", e => {
     if (!ehCampo(e.target)) return;
@@ -119,17 +171,22 @@
       document.body.classList.remove("tb-digitando");
       /* um "toque" na rolagem faz o iPhone recalcular a tela */
       window.scrollTo(window.scrollX, window.scrollY);
-      prende();
-      setTimeout(prende, 350);
+      redesenha();
     }, 100);
   });
   if (vv) {
     vv.addEventListener("resize", prende);
     vv.addEventListener("scroll", prende);
   }
+  window.addEventListener("resize", prende);
+  window.addEventListener("orientationchange", () => setTimeout(redesenha, 300));
   window.addEventListener("scroll", prende, { passive: true });
-  window.addEventListener("pageshow", prende);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) prende(); });
+  window.addEventListener("pageshow", redesenha);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) redesenha(); });
+  /* Rede de segurança: confere a posição a cada segundo enquanto o app
+     está na tela, para o caso de o iPhone mover a barra sem avisar. */
+  setInterval(() => { if (!document.hidden) prende(); }, 1000);
+  redesenha();
 
   btnMais.addEventListener("click", () =>
     abre(!document.body.classList.contains("tb-aberto")));
