@@ -45,51 +45,7 @@ body{
   line-height:1.5;
 }
 
-/* ---------- cabeçalho ---------- */
-header{
-  background:var(--principal);
-  color:#fff;
-  padding:20px 20px 18px;
-  padding-top:max(20px,env(safe-area-inset-top));
-}
-header h1{
-  margin:0;
-  font-size:20px;
-  font-weight:600;
-  letter-spacing:-.01em;
-}
-/* Mesma estrutura do cabeçalho do painel: a marca à esquerda, a ação à
-   direita, e as duas descem uma sobre a outra quando a tela é estreita
-   demais para caberem lado a lado. */
-.topo{
-  display:flex;align-items:flex-end;justify-content:space-between;
-  gap:12px;flex-wrap:wrap;
-}
-.entrar{
-  display:inline-flex;align-items:center;gap:7px;
-  padding:7px 14px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.4);
-  border-radius:var(--raio);
-  color:#fff;text-decoration:none;
-  font-size:14px;font-weight:500;
-  white-space:nowrap;
-}
-.entrar:hover{background:rgba(255,255,255,.24)}
-.menu{display:flex;gap:8px;flex-wrap:wrap}
-.entrar svg{flex:none}
-header p{
-  margin:4px 0 0;
-  font-size:13px;
-  font-weight:400;
-  color:#C8DCC0;
-}
-/* ---------- logos ---------- */
-.marcas{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.lg{display:block;background-repeat:no-repeat;background-position:left center;background-size:contain}
-.lg-tf{width:74px;height:22px;background-image:var(--logo-tf)}
-.lg-foc{width:90px;height:14px;background-image:var(--logo-foc-tela)}
-.risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
+/* ---------- cabeçalho: em /barra.css ---------- */
 
 /* ---------- estrutura ---------- */
 main{max-width:640px;margin:0 auto;padding:20px 16px 40px}
@@ -354,61 +310,29 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
+<link rel="stylesheet" href="/barra.css">
 </head>
 <body>
 
-<header>
-  <div class="topo">
-    <div>
+<header class="tb" data-pagina="registro">
+  <div class="tb-in">
+    <div class="tb-linha">
       <div class="marcas">
         <span class="lg lg-tf" role="img" aria-label="Terra Forte"></span>
         <span class="risco"></span>
         <span class="lg lg-foc" role="img" aria-label="Focalização"></span>
       </div>
-      <h1>Registro de visita</h1>
+      <div class="tb-titulo">
+        <h1>Registro de visita</h1>
+      </div>
+      <div class="tb-dir">
+        <a class="tb-btn" href="https://calculadora-acessa-agro.vercel.app/" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="3.5" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 9h.01M9 9h.01M11.5 9h.01M6.5 12.5h.01M9 12.5h.01M11.5 12.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Calculadora AcessaAgro <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M8 2h4v4M12 2L6.5 7.5M10.5 8.5V12H2V3.5h3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
     </div>
-    <nav class="menu" aria-label="Outras páginas">
-      <a class="entrar" href="/produtores.html">
-        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-          <circle cx="9" cy="6" r="2.8" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M3.5 15.5c.6-2.9 2.8-4.6 5.5-4.6s4.9 1.7 5.5 4.6"
-                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        Produtores
-      </a>
-      <a class="entrar" href="/acoes.html">
-        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-          <rect x="2.5" y="2.5" width="13" height="13" rx="2.5"
-                stroke="currentColor" stroke-width="1.5"/>
-          <path d="M5.8 9.2l2.2 2.2 4.3-4.6" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Ações
-      </a>
-      <a class="entrar" href="/painel.html">
-        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-          <path d="M11 2.5h3A1.5 1.5 0 0115.5 4v10a1.5 1.5 0 01-1.5 1.5h-3"
-                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M7.5 12.5L11 9 7.5 5.5M11 9H2.5"
-                stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Painel
-      </a>
-      <a class="entrar" href="https://calculadora-acessa-agro.vercel.app/"
-         target="_blank" rel="noopener">
-        <svg width="17" height="17" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-          <rect x="3.5" y="2" width="11" height="14" rx="2"
-                stroke="currentColor" stroke-width="1.5"/>
-          <path d="M6 5.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M6.5 9h.01M9 9h.01M11.5 9h.01M6.5 12.5h.01M9 12.5h.01M11.5 12.5h.01"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        Calculadora AcessaAgro
-      </a>
-    </nav>
+    <nav class="tb-abas" aria-label="Páginas"></nav>
   </div>
 </header>
+<script src="/barra.js"></script>
 
 <main>
   <div class="fila" id="fila" hidden>
@@ -455,6 +379,8 @@ select:disabled{background:var(--fundo2);color:var(--tinta-fraca)}
         <select id="produtor" name="produtor" required disabled>
           <option value="">Selecione o consultor primeiro</option>
         </select>
+        <input type="text" id="produtor-livre" placeholder="Nome do produtor visitado"
+               aria-label="Nome do produtor visitado" hidden>
         <p class="dica" id="dica-municipio" hidden></p>
       </div>
 
@@ -617,6 +543,10 @@ const $ = id => document.getElementById(id);
 const selConsultor = $("consultor");
 const selProdutor  = $("produtor");
 const dicaMun      = $("dica-municipio");
+const txtProdutor  = $("produtor-livre");
+/* Consultor sem carteira digita o produtor; os demais escolhem na lista. */
+const produtorEscolhido = () =>
+  txtProdutor.hidden ? selProdutor.value : txtProdutor.value.trim();
 const form         = $("form");
 const erro         = $("erro");
 const btnEnviar    = $("btn-enviar");
@@ -689,7 +619,7 @@ function limpaHtml(origem) {
 RELATORES.forEach(nome => $("relator").add(new Option(nome, nome)));
 
 /* --- popular consultores --- */
-[...new Set(CARTEIRA.map(l => l[0]))]
+[...new Set([...CARTEIRA.map(l => l[0]), ...CONSULTORES_SEM_CARTEIRA])]
   .sort((a, b) => a.localeCompare(b, "pt-BR"))
   .forEach(nome => selConsultor.add(new Option(nome, nome)));
 
@@ -698,6 +628,12 @@ selConsultor.addEventListener("change", () => {
   const c = selConsultor.value;
   selProdutor.innerHTML = "";
   dicaMun.hidden = true;
+
+  const semCarteira = !!c && !CARTEIRA.some(l => l[0] === c);
+  selProdutor.hidden = semCarteira;
+  selProdutor.required = !semCarteira;
+  txtProdutor.hidden = !semCarteira;
+  if (semCarteira) return;
 
   if (!c) {
     selProdutor.add(new Option("Selecione o consultor primeiro", ""));
@@ -808,7 +744,8 @@ form.addEventListener("submit", async e => {
   erro.hidden = true;
 
   if (!selConsultor.value) return mostraErro("Escolha o consultor.");
-  if (!selProdutor.value)  return mostraErro("Escolha o produtor visitado.");
+  if (!produtorEscolhido()) return mostraErro(txtProdutor.hidden
+    ? "Escolha o produtor visitado." : "Escreva o nome do produtor visitado.");
   if (!$("data").value)    return mostraErro("Informe a data da visita.");
   if (!editor.textContent.trim()) return mostraErro("Escreva a descrição da visita.");
 
@@ -820,8 +757,8 @@ form.addEventListener("submit", async e => {
          : String(Date.now()) + "-" + Math.random().toString(16).slice(2)),
     enviado_em: new Date().toISOString(),
     consultor: selConsultor.value,
-    produtor: selProdutor.value,
-    municipio: (CARTEIRA.find(x => x[1] === selProdutor.value) || [])[2] || "",
+    produtor: produtorEscolhido(),
+    municipio: (CARTEIRA.find(x => x[1] === produtorEscolhido()) || [])[2] || "",
     data_visita: $("data").value,
     talhao: $("talhao").value.trim(),
     relator: $("relator").value,
@@ -1324,7 +1261,7 @@ async function terminouGravacao(audio) {
     tipo: audio.type,
     consultor: selConsultor.value,
     relator: $("relator").value,
-    produtor: selProdutor.value,
+    produtor: produtorEscolhido(),
     data_visita: $("data").value,
     talhao: $("talhao").value.trim()
   };
@@ -1465,8 +1402,11 @@ function abreRascunho(r) {
       selConsultor.dispatchEvent(new Event("change"));
     }
     if (r.produtor) {
-      selProdutor.value = r.produtor;
-      selProdutor.dispatchEvent(new Event("change"));
+      if (!txtProdutor.hidden) txtProdutor.value = r.produtor;
+      else {
+        selProdutor.value = r.produtor;
+        selProdutor.dispatchEvent(new Event("change"));
+      }
     }
     if (r.relator) $("relator").value = r.relator;
     if (r.data_visita) $("data").value = r.data_visita;

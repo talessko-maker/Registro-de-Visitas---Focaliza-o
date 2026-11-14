@@ -43,50 +43,7 @@ body{
   line-height:1.5;
 }
 
-/* ---------- cabeçalho ---------- */
-header{
-  background:var(--principal);
-  color:#fff;
-  padding:20px 20px 18px;
-  padding-top:max(20px,env(safe-area-inset-top));
-}
-header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
-header p{margin:4px 0 0;font-size:13px;font-weight:400;color:#C3D8F2}
-.marcas{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.lg{display:block;background-repeat:no-repeat;background-position:left center;background-size:contain}
-.lg-tf{width:74px;height:22px;background-image:var(--logo-tf)}
-.lg-foc{width:90px;height:14px;background-image:var(--logo-foc-tela)}
-.risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
-.topo{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-/* Os dois botões andam juntos. Soltos no .sessao, em tela estreita o
-   e-mail gruda no primeiro e empurra o "Sair" sozinho para a linha de
-   baixo; agrupados, o par inteiro é que desce. */
-.acoes-sessao{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#quem-entrou{font-size:13px;color:#C3D8F2}
-button.sair{
-  background:rgba(255,255,255,.14);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.4);
-  padding:7px 14px;
-  font-size:14px;
-}
-button.sair:hover{background:rgba(255,255,255,.24)}
-/* Caminho de volta ao formulário, o par do botão "Painel" que existe
-   lá. Mesma roupa do "Sair", e o "+" é o que evita a troca de um pelo
-   outro na pressa — sair por engano custa a sessão. */
-a.nova{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 14px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.4);
-  border-radius:var(--raio);
-  color:#fff;text-decoration:none;
-  font-size:14px;font-weight:600;
-  white-space:nowrap;
-}
-a.nova:hover{background:rgba(255,255,255,.24)}
-a.nova svg{flex:none}
+/* ---------- cabeçalho: em /barra.css ---------- */
 
 /* ---------- estrutura ---------- */
 main{max-width:940px;margin:0 auto;padding:20px 16px 40px}
@@ -256,39 +213,34 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 .carregando{text-align:center;color:var(--tinta-fraca);font-size:14px;padding:30px}
 [hidden]{display:none!important}
 </style>
+<link rel="stylesheet" href="/barra.css">
 </head>
 <body>
 
-<header>
-  <div class="topo">
-    <div>
+<header class="tb" data-pagina="painel">
+  <div class="tb-in">
+    <div class="tb-linha">
       <div class="marcas">
         <span class="lg lg-tf" role="img" aria-label="Terra Forte"></span>
         <span class="risco"></span>
         <span class="lg lg-foc" role="img" aria-label="Focalização"></span>
       </div>
-      <h1>Painel de visitas</h1>
-      <p id="assinatura">Consulta dos registros enviados pelos consultores</p>
-    </div>
-    <div class="sessao" id="sessao" hidden>
-      <span id="quem-entrou"></span>
-      <div class="acoes-sessao">
-        <a class="nova" href="/">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <path d="M8 3.2v9.6M3.2 8h9.6" stroke="currentColor"
-                  stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          Nova visita
-        </a>
-        <a class="nova" href="/produtores.html">Produtores</a>
-        <a class="nova" href="/acoes.html">Ações</a>
-        <a class="nova" href="/gestao.html">Gestão</a>
-        <a class="nova" href="https://calculadora-acessa-agro.vercel.app/" target="_blank" rel="noopener">Calculadora AcessaAgro</a>
-        <button type="button" class="sair" id="btn-sair">Sair</button>
+      <div class="tb-titulo">
+        <h1>Painel de visitas</h1>
+        <p id="assinatura">Consulta dos registros enviados pelos consultores</p>
+      </div>
+      <div class="tb-dir">
+        <a class="tb-btn" href="https://calculadora-acessa-agro.vercel.app/" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="3.5" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 9h.01M9 9h.01M11.5 9h.01M6.5 12.5h.01M9 12.5h.01M11.5 12.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Calculadora AcessaAgro <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M8 2h4v4M12 2L6.5 7.5M10.5 8.5V12H2V3.5h3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="sessao" id="sessao" hidden>
+          <span id="quem-entrou"></span>
+          <button type="button" class="tb-btn cheio" id="btn-sair"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M7 2.5H4A1.5 1.5 0 002.5 4v10A1.5 1.5 0 004 15.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 12.5L14.5 9 11 5.5M14.5 9H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Sair</button>
+        </div>
       </div>
     </div>
+    <nav class="tb-abas" aria-label="Páginas"></nav>
   </div>
 </header>
+<script src="/barra.js"></script>
 
 <main>
 

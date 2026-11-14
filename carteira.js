@@ -60,12 +60,16 @@ const CARTEIRA = [
   ["Shander","MARCIO PAUL","Canoinhas"]
 ];
 
+/* Consultores sem produtor na carteira: aparecem na lista do formulário
+   e digitam o nome do produtor visitado. */
+const CONSULTORES_SEM_CARTEIRA = ["Rodrigo"];
+
 /* -------------------------------------------------------------------
    2. RELATORES
    Quem digitou o relatório, quando não foi o próprio consultor da
    visita. Para incluir ou tirar alguém, edite só esta linha.
    ------------------------------------------------------------------- */
-const RELATORES = ["Yuri", "Guilherme"];
+const RELATORES = ["Yuri", "Guilherme", "Tales"];
 
 /* -------------------------------------------------------------------
    3. SITUAÇÃO DO PRODUTOR

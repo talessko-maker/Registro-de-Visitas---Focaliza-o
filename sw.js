@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v19";
+const VERSAO = "v20";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 
@@ -15,6 +15,8 @@ const ESSENCIAIS = [
   "/",
   "/index.html",
   "/carteira.js",
+  "/barra.js",
+  "/barra.css",
   "/vendor-jspdf.js",
   "/relatorio.js",
   "/manifest.json",

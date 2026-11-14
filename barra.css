@@ -1,0 +1,128 @@
+/* ===================================================================
+   BARRA DE NAVEGAÇÃO — a mesma nas cinco páginas.
+
+   PC: cabeçalho azul com as marcas, o título, a calculadora e o "Sair",
+   e embaixo as abas das páginas; a aba aberta se encaixa no fundo da
+   página. Celular (até 760px): o cabeçalho fica só com as marcas e o
+   título, e as páginas vão para uma barra fixa embaixo, com "Mais"
+   abrindo Gestão, Calculadora e Sair.
+
+   As abas, a barra de baixo e a folha do "Mais" são montadas por
+   /barra.js. Cada página só traz o <header class="tb">.
+   Carregue depois do <style> da página, para valer por cima dele.
+   =================================================================== */
+
+/* ---------- logos ---------- */
+.marcas{display:flex;align-items:center;gap:12px;flex:none}
+.lg{display:block;background-repeat:no-repeat;background-position:left center;background-size:contain}
+.lg-tf{width:74px;height:22px;background-image:var(--logo-tf)}
+.lg-foc{width:90px;height:14px;background-image:var(--logo-foc-tela)}
+.risco{width:1px;height:18px;background:rgba(255,255,255,.38);flex:none}
+
+/* ---------- cabeçalho ---------- */
+header.tb{
+  background:var(--principal);
+  color:#fff;
+  padding:0;
+}
+.tb-in{
+  max-width:1180px;margin:0 auto;
+  padding:16px 24px 0;
+  padding-top:max(16px,env(safe-area-inset-top));
+}
+.tb-linha{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.tb-titulo{padding-left:18px;border-left:1px solid rgba(255,255,255,.35);min-width:0}
+header.tb h1{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+header.tb p{margin:2px 0 0;font-size:12.5px;font-weight:400;color:#C3D8F2;line-height:1.35}
+.tb-dir{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-dir .sessao{display:flex;align-items:center;gap:10px}
+.tb-dir .sessao[hidden]{display:none}
+#quem-entrou{font-size:13px;color:#C3D8F2}
+
+.tb-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.45);
+  background:transparent;
+  color:#fff;text-decoration:none;
+  font:inherit;font-size:13.5px;font-weight:500;line-height:1.4;
+  white-space:nowrap;cursor:pointer;
+}
+.tb-btn:hover{background:rgba(255,255,255,.12)}
+.tb-btn.cheio{background:#fff;color:var(--principal);border-color:#fff}
+.tb-btn.cheio:hover{background:#E8F1FC}
+.tb-btn svg,.tb-abas svg,.tb-baixo svg,.tb-folha svg{flex:none}
+
+/* abas */
+.tb-abas{display:flex;gap:6px;margin-top:16px;overflow-x:auto;scrollbar-width:none}
+.tb-abas a{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 18px;
+  border-radius:12px 12px 0 0;
+  color:rgba(255,255,255,.85);text-decoration:none;
+  font-size:14.5px;font-weight:500;white-space:nowrap;
+}
+.tb-abas a:hover{background:rgba(255,255,255,.1);color:#fff}
+.tb-abas a[aria-current="page"]{background:var(--fundo);color:var(--principal);font-weight:600}
+
+.tb-btn:focus-visible,.tb-abas a:focus-visible,.tb-baixo a:focus-visible,
+.tb-baixo button:focus-visible,.tb-folha a:focus-visible,.tb-folha button:focus-visible{
+  outline:3px solid #9CC3F0;outline-offset:2px;
+}
+
+/* barra de baixo e folha do "Mais": só no celular */
+.tb-baixo,.tb-folha,.tb-veu{display:none}
+
+@media (max-width:760px){
+  .tb-in{padding:14px 16px 16px;padding-top:max(14px,env(safe-area-inset-top))}
+  .tb-linha{flex-direction:column;align-items:flex-start;gap:8px}
+  .tb-titulo{padding-left:0;border-left:0}
+  header.tb h1{font-size:19px}
+  header.tb p,.tb-dir,.tb-abas{display:none}
+
+  body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+
+  .tb-baixo{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:#fff;border-top:1px solid var(--linha);
+    padding:6px 4px calc(8px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 14px rgba(3,40,90,.08);
+  }
+  .tb-baixo a,.tb-baixo button{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:4px 0;margin:0;border:0;background:none;
+    font:inherit;font-size:11px;font-weight:500;line-height:1.3;
+    color:var(--tinta-fraca);text-decoration:none;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tb-baixo .ic{width:52px;height:30px;border-radius:15px;display:grid;place-items:center}
+  .tb-baixo [aria-current="page"],.tb-baixo [aria-expanded="true"]{color:var(--principal);font-weight:600}
+  .tb-baixo [aria-current="page"] .ic,.tb-baixo [aria-expanded="true"] .ic{background:var(--marcado)}
+  .tb-baixo .registrar .ic{background:var(--principal);color:#fff}
+  .tb-baixo .registrar{color:var(--principal)}
+
+  body.tb-aberto .tb-veu{display:block;position:fixed;inset:0;z-index:48;background:rgba(10,25,45,.45)}
+  body.tb-aberto .tb-folha{
+    display:block;position:fixed;left:0;right:0;bottom:0;z-index:49;
+    background:#fff;border-radius:18px 18px 0 0;
+    padding:10px 12px calc(86px + env(safe-area-inset-bottom));
+    box-shadow:0 -10px 30px rgba(0,0,0,.18);
+  }
+  .tb-folha .puxa{width:40px;height:4px;border-radius:2px;background:var(--linha);margin:0 auto 10px}
+  .tb-folha a,.tb-folha button{
+    display:flex;align-items:center;gap:14px;width:100%;
+    padding:14px;border:0;border-radius:10px;background:none;
+    color:var(--tinta);text-decoration:none;text-align:left;
+    font:inherit;font-size:15.5px;font-weight:500;cursor:pointer;
+  }
+  .tb-folha a[aria-current="page"]{background:var(--marcado);color:var(--principal);font-weight:600}
+  .tb-folha .sai{color:#B23A3A}
+  .tb-folha .sai small{color:var(--tinta-fraca);font-weight:400;font-size:12.5px;margin-left:auto}
+  .tb-folha hr{border:0;height:1px;background:var(--linha);margin:4px 14px}
+}
+
+@media print{
+  .tb-baixo,.tb-folha,.tb-veu,.tb-abas,.tb-dir{display:none !important}
+}
