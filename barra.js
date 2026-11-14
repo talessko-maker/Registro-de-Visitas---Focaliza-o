@@ -15,6 +15,8 @@
     acoes: '<rect x="2.5" y="2.5" width="13" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 9.2l2.2 2.2 4.3-4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
     painel: '<rect x="2.5" y="2.5" width="5.5" height="7" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="2.5" width="5.5" height="4" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="2.5" y="11.5" width="5.5" height="4" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="8.5" width="5.5" height="7" rx="1.3" stroke="currentColor" stroke-width="1.5"/>',
     gestao: '<path d="M3 15.5V9M7 15.5V5M11 15.5v-4M15 15.5V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+    /* folha, para o registro do site Terra Forte */
+    tf: '<path d="M14.5 3.5C8 3.5 4 6.5 4 11.2c0 1.3.4 2.4 1 3.3 1-3 3.4-5.4 6.5-6.7-2.6 1.6-4.5 3.9-5.3 6.6.8.4 1.7.6 2.7.6 4.3 0 5.6-4.4 5.6-11.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
     mip: '<path d="M9 4.6C7.6 3.5 5.4 3 2.5 3.2v10.5c2.9-.2 5.1.3 6.5 1.4 1.4-1.1 3.6-1.6 6.5-1.4V3.2C12.6 3 10.4 3.5 9 4.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 4.6v10.5" stroke="currentColor" stroke-width="1.5"/>',
     calculadora: '<rect x="3.5" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 9h.01M9 9h.01M11.5 9h.01M6.5 12.5h.01M9 12.5h.01M11.5 12.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     sair: '<path d="M7 2.5H4A1.5 1.5 0 002.5 4v10A1.5 1.5 0 004 15.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 12.5L14.5 9 11 5.5M14.5 9H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -29,6 +31,9 @@
      aparece na barra de baixo (as outras vão para o "Mais"). */
   const PAGINAS = [
     ["registro",   "/",                "Registro",   "Registrar",  true],
+    /* o formulário do site Terra Forte: outro endereço, abre em outra aba */
+    ["tf",         "https://registro-de-visitas-tf-theta.vercel.app/",
+                   "Registro Terra Forte", "Registro Terra Forte", false],
     ["produtores", "/produtores.html", "Produtores", "Produtores", true],
     ["acoes",      "/acoes.html",      "Ações",      "Ações",      true],
     ["painel",     "/painel.html",     "Painel",     "Painel",     true],
@@ -43,12 +48,23 @@
   if (!header) return;
   const atual = header.dataset.pagina;
   const marca = id => (id === atual ? ' aria-current="page"' : "") + (id === "gestao" ? " data-restrito" : "");
+  /* endereço de outro site: abre em outra aba, com o ícone de "sai daqui" */
+  const fora = href => /^https?:/.test(href);
+  const alvo = href => fora(href) ? ' target="_blank" rel="noopener"' : "";
+  const icFora = href => fora(href) ? " " + externo : "";
 
   /* --- PC: abas --- */
   const abas = header.querySelector(".tb-abas");
   if (abas) {
-    abas.innerHTML = PAGINAS.map(([id, href, nome]) =>
+    /* as abas são só deste site; os de fora viram botão no topo, ao lado
+       da calculadora, para a fileira de abas não ficar larga demais */
+    abas.innerHTML = PAGINAS.filter(p => !fora(p[1])).map(([id, href, nome]) =>
       `<a href="${href}"${marca(id)}>${svg(id)}${nome}</a>`).join("");
+  }
+  const dir = header.querySelector(".tb-dir");
+  if (dir) {
+    dir.insertAdjacentHTML("afterbegin", PAGINAS.filter(p => fora(p[1])).map(([id, href, nome]) =>
+      `<a class="tb-btn" href="${href}"${alvo(href)}>${svg(id, 16)}${nome}${icFora(href)}</a>`).join(""));
   }
 
   /* --- celular: barra de baixo --- */
@@ -57,7 +73,9 @@
   const baixo = document.createElement("nav");
   baixo.className = "tb-baixo";
   baixo.setAttribute("aria-label", "Páginas");
-  baixo.innerHTML = PAGINAS.filter(p => p[4]).map(([id, href, , curto]) =>
+  /* Registrar no meio da barra de baixo, ao alcance do polegar */
+  const ORDEM_BAIXO = ["produtores", "acoes", "registro", "painel"];
+  baixo.innerHTML = ORDEM_BAIXO.map(i => PAGINAS.find(p => p[0] === i)).map(([id, href, , curto]) =>
       `<a href="${href}"${marca(id)}${id === "registro" ? ' class="registrar"' : ""}>
         <span class="ic">${svg(id)}</span>${curto}</a>`).join("")
     + `<button type="button" id="tb-mais" aria-expanded="false" aria-controls="tb-folha"
@@ -74,7 +92,7 @@
   folha.setAttribute("aria-label", "Mais opções");
   folha.innerHTML = `<div class="puxa" aria-hidden="true"></div>
     ${foraDaBarra.map(([id, href, nome]) =>
-      `<a href="${href}"${marca(id)}>${svg(id)}${nome}</a>`).join("")}
+      `<a href="${href}"${alvo(href)}${marca(id)}>${svg(id)}${nome}${icFora(href)}</a>`).join("")}
     <a href="${CALCULADORA}" target="_blank" rel="noopener">${svg("calculadora")}Calculadora AcessaAgro ${externo}</a>
     <div class="tb-sair" hidden><hr>
       <button type="button" class="sai">${svg("sair")}Sair <small></small></button></div>`;
