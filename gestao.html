@@ -394,8 +394,9 @@ table.regua td,table.regua th{vertical-align:top}
 
       <section class="cartao">
         <h2>Nota por pessoa</h2>
-        <p class="explica">Quem fez o relatório: o "Relatório feito por", quando preenchido;
-          senão, o consultor da visita. Toque numa linha para ver os relatórios da pessoa.</p>
+        <p class="explica">A nota vai para quem fez o relatório: o "Relatório feito por", quando
+          preenchido (mesmo que o cliente seja da carteira de outro consultor); senão, o consultor
+          da visita. Toque numa linha para ver os relatórios da pessoa.</p>
         <p class="legenda">
           <span><i style="background:var(--cA)"></i>A</span>
           <span><i style="background:var(--cB)"></i>B</span>
@@ -941,7 +942,7 @@ function desenhaListaRelatorios(lista) {
       <summary>
         <span class="n">${br(v.data_visita)}</span>
         <span class="prod" title="${escapa(v.produtor)}">${escapa(v.produtor)}</span>
-        <span class="quem">${escapa(autor(v))}</span>
+        <span class="quem" title="${autor(v) !== v.consultor ? `Feito por ${escapa(autor(v))} para a carteira de ${escapa(v.consultor)}` : ""}">${escapa(autor(v))}${autor(v) !== v.consultor ? ` <span style="color:var(--tinta-muda)">· p/ ${escapa(v.consultor)}</span>` : ""}</span>
         <span class="orig">${ORIGEM[v.origem] || escapa(v.origem)}</span>
         <span class="nt">${r.auditoria ? `<span class="alerta-ic" title="Tem alerta para auditoria">!</span>` : ""}
           <span class="nota-n">${r.nota}</span>${selo(r.classe)}</span>
@@ -954,7 +955,7 @@ function desenhaListaRelatorios(lista) {
         ${r.alertas.length ? `<h4 style="color:var(--alerta)">Alertas para auditoria</h4><ul>${r.alertas.map(a => `<li>${escapa(a)}</li>`).join("")}</ul>` : ""}
         ${r.pendencias.length ? `<h4>O que faltou</h4><ul>${r.pendencias.map(p => `<li>${escapa(p)}</li>`).join("")}</ul>`
                               : `<h4>Nada faltou.</h4>`}
-        <h4>Consultor · Formulário</h4><p style="margin:0">${escapa(v.consultor)} · ${ORIGEM[v.origem] || escapa(v.origem)}${
+        <h4>Feito por · Carteira · Formulário</h4><p style="margin:0">${escapa(autor(v))} · ${escapa(v.consultor)} · ${ORIGEM[v.origem] || escapa(v.origem)}${
           (v.extras || {}).talhao ? ` · Talhão ${escapa(v.extras.talhao)}` : ""}</p>
         <h4>Descrição</h4><div class="txt">${escapa(v.descricao || "—")}</div>
         ${(v.acao || "").trim() ? `<h4>Ação combinada${v.prazo_acao ? ` · prazo ${br(v.prazo_acao)}` : ""}</h4><div class="txt">${escapa(v.acao)}</div>` : ""}
