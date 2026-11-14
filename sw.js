@@ -6,9 +6,13 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v20";
+const VERSAO = "v21";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
+/* Manuais (MIP) marcados como "Disponibilizar offline" na própria
+   página. Quem põe e tira daqui é a página; este arquivo só serve e
+   atualiza. */
+const CACHE_MIP    = "mip-offline";
 
 /* Arquivos guardados já na instalação. */
 const ESSENCIAIS = [
@@ -41,7 +45,9 @@ self.addEventListener("activate", e => {
     caches.keys()
       .then(nomes => Promise.all(
         nomes
-          .filter(n => n !== CACHE_APP && n !== CACHE_FONTES)
+          /* "mip-offline" é dos manuais que o usuário escolheu guardar:
+             não depende da VERSAO e não pode sumir numa atualização. */
+          .filter(n => n !== CACHE_APP && n !== CACHE_FONTES && n !== CACHE_MIP)
           .map(n => caches.delete(n))
       ))
       .then(() => self.clients.claim())
@@ -88,12 +94,21 @@ self.addEventListener("fetch", e => {
      ficasse sem sinal. */
   if (req.mode === "navigate") {
     const ehFormulario = url.pathname === "/" || url.pathname === "/index.html";
+    /* Os manuais só ficam guardados se o usuário marcou "Disponibilizar
+       offline"; nesse caso a cópia é renovada a cada abertura com sinal. */
+    const ehManual = url.pathname.startsWith("/mip-");
     e.respondWith(
       fetch(req)
         .then(resp => {
           if (ehFormulario) {
             const copia = resp.clone();
             caches.open(CACHE_APP).then(c => c.put("/index.html", copia));
+          }
+          if (ehManual && resp.ok) {
+            const copia = resp.clone();
+            caches.open(CACHE_MIP).then(async c => {
+              if (await c.match(url.pathname)) c.put(url.pathname, copia);
+            });
           }
           return resp;
         })
@@ -103,11 +118,18 @@ self.addEventListener("fetch", e => {
                              (await caches.match("/"));
             if (guardado) return guardado;
           }
+          if (ehManual) {
+            const guardado = await (await caches.open(CACHE_MIP)).match(url.pathname);
+            if (guardado) return guardado;
+          }
           return new Response(
             "<meta charset='utf-8'><p style=\"font:16px system-ui;padding:24px\">" +
             (ehFormulario
               ? "Sem conexão e a página ainda não foi guardada neste aparelho. " +
                 "Abra o site uma vez com internet."
+              : ehManual
+              ? "Sem conexão. Este manual não foi marcado como “Disponibilizar " +
+                "offline” neste aparelho. Abra com internet e ligue a opção."
               : "Esta página precisa de internet para ler os registros.") +
             "</p>",
             { headers: { "Content-Type": "text/html; charset=utf-8" } }

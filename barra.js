@@ -15,6 +15,7 @@
     acoes: '<rect x="2.5" y="2.5" width="13" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M5.8 9.2l2.2 2.2 4.3-4.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
     painel: '<rect x="2.5" y="2.5" width="5.5" height="7" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="2.5" width="5.5" height="4" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="2.5" y="11.5" width="5.5" height="4" rx="1.3" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="8.5" width="5.5" height="7" rx="1.3" stroke="currentColor" stroke-width="1.5"/>',
     gestao: '<path d="M3 15.5V9M7 15.5V5M11 15.5v-4M15 15.5V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+    mip: '<path d="M9 4.6C7.6 3.5 5.4 3 2.5 3.2v10.5c2.9-.2 5.1.3 6.5 1.4 1.4-1.1 3.6-1.6 6.5-1.4V3.2C12.6 3 10.4 3.5 9 4.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 4.6v10.5" stroke="currentColor" stroke-width="1.5"/>',
     calculadora: '<rect x="3.5" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 9h.01M9 9h.01M11.5 9h.01M6.5 12.5h.01M9 12.5h.01M11.5 12.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     sair: '<path d="M7 2.5H4A1.5 1.5 0 002.5 4v10A1.5 1.5 0 004 15.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 12.5L14.5 9 11 5.5M14.5 9H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
     mais: '<circle cx="3.5" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="14.5" cy="9" r="1.5" fill="currentColor"/>'
@@ -31,7 +32,9 @@
     ["produtores", "/produtores.html", "Produtores", "Produtores", true],
     ["acoes",      "/acoes.html",      "Ações",      "Ações",      true],
     ["painel",     "/painel.html",     "Painel",     "Painel",     true],
-    ["gestao",     "/gestao.html",     "Gestão",     "Gestão",     false]
+    ["gestao",     "/gestao.html",     "Gestão",     "Gestão",     false],
+    ["mip",        "/mip-semente.html#ocorrencia-semente",
+                   "MIP · Ocorrência – Semente de Soja", "MIP · Ocorrência – Semente de Soja", false]
   ];
 
   const header = document.querySelector("header.tb");
