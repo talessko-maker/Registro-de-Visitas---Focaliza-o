@@ -6,7 +6,7 @@
    Ao publicar uma versão nova, troque o número em VERSAO. Isso apaga
    o cache antigo e força o aparelho a buscar tudo de novo.
    =================================================================== */
-const VERSAO = "v21";
+const VERSAO = "v22";
 const CACHE_APP    = `registro-focalizacao-${VERSAO}`;
 const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
 /* Manuais (MIP) marcados como "Disponibilizar offline" na própria
@@ -14,10 +14,30 @@ const CACHE_FONTES = `registro-focalizacao-fontes-${VERSAO}`;
    atualiza. */
 const CACHE_MIP    = "mip-offline";
 
+/* Páginas do app: endereço pedido -> chave em que a cópia fica guardada.
+   Todas entram já na instalação, para abrirem sem sinal mesmo que a
+   pessoa nunca as tenha visitado com internet. */
+const PAGINAS = {
+  "/":                "/index.html",
+  "/index.html":      "/index.html",
+  "/painel.html":     "/painel.html",
+  "/painel":          "/painel.html",
+  "/acoes.html":      "/acoes.html",
+  "/acoes":           "/acoes.html",
+  "/produtores.html": "/produtores.html",
+  "/produtores":      "/produtores.html",
+  "/gestao.html":     "/gestao.html",
+  "/gestao":          "/gestao.html"
+};
+
 /* Arquivos guardados já na instalação. */
 const ESSENCIAIS = [
-  "/",
   "/index.html",
+  "/painel.html",
+  "/acoes.html",
+  "/produtores.html",
+  "/gestao.html",
+  "/sessao.js",
   "/carteira.js",
   "/barra.js",
   "/barra.css",
@@ -30,12 +50,24 @@ const ESSENCIAIS = [
   "/apple-touch-icon.png"
 ];
 
+/* Busca e guarda um arquivo. Se o servidor redirecionou, guarda uma
+   cópia sem a marca de redirecionamento: o Safari se recusa a abrir uma
+   página servida assim pelo service worker. */
+async function guardaLimpo(cache, u) {
+  const r = await fetch(u, { cache: "reload" });
+  if (!r.ok) throw new Error(u + ": " + r.status);
+  const limpo = r.redirected
+    ? new Response(await r.blob(), { status: 200, headers: r.headers })
+    : r;
+  await cache.put(u, limpo);
+}
+
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open(CACHE_APP)
       /* addAll é tudo-ou-nada: um arquivo que falhe derruba a instalação
          inteira, então cada um vai por conta própria. */
-      .then(c => Promise.allSettled(ESSENCIAIS.map(u => c.add(u))))
+      .then(c => Promise.allSettled(ESSENCIAIS.map(u => guardaLimpo(c, u))))
       .then(() => self.skipWaiting())
   );
 });
@@ -86,25 +118,27 @@ self.addEventListener("fetch", e => {
   if (url.origin !== self.location.origin) return;
 
   /* A página em si: tenta a rede primeiro, para que um deploy novo
-     apareça assim que houver sinal. Sem sinal, cai no cache.
+     apareça assim que houver sinal. Sem sinal, cai na cópia guardada.
 
-     Só o formulário é guardado. O painel e a página dos produtores
-     precisam de rede para ler o banco, e guardá-los aqui sobrescreveria
-     o formulário — o aparelho abriria um deles no lugar dele quando
-     ficasse sem sinal. */
+     Cada página do app é guardada com o próprio endereço (PAGINAS), para
+     que, sem sinal, o aparelho abra a página pedida — e não o formulário
+     no lugar dela. Sem internet o painel, as ações e os produtores abrem
+     normalmente; só os dados do banco esperam o sinal voltar. */
   if (req.mode === "navigate") {
-    const ehFormulario = url.pathname === "/" || url.pathname === "/index.html";
+    const pagina = PAGINAS[url.pathname];
     /* Os manuais só ficam guardados se o usuário marcou "Disponibilizar
        offline"; nesse caso a cópia é renovada a cada abertura com sinal. */
     const ehManual = url.pathname.startsWith("/mip-");
     e.respondWith(
       fetch(req)
         .then(resp => {
-          if (ehFormulario) {
+          /* Resposta que veio de redirecionamento não pode ser servida de
+             volta numa navegação (o Safari recusa), então não é guardada. */
+          if (pagina && resp.ok && !resp.redirected) {
             const copia = resp.clone();
-            caches.open(CACHE_APP).then(c => c.put("/index.html", copia));
+            caches.open(CACHE_APP).then(c => c.put(pagina, copia));
           }
-          if (ehManual && resp.ok) {
+          if (ehManual && resp.ok && !resp.redirected) {
             const copia = resp.clone();
             caches.open(CACHE_MIP).then(async c => {
               if (await c.match(url.pathname)) c.put(url.pathname, copia);
@@ -113,9 +147,8 @@ self.addEventListener("fetch", e => {
           return resp;
         })
         .catch(async () => {
-          if (ehFormulario) {
-            const guardado = (await caches.match("/index.html")) ||
-                             (await caches.match("/"));
+          if (pagina) {
+            const guardado = await (await caches.open(CACHE_APP)).match(pagina);
             if (guardado) return guardado;
           }
           if (ehManual) {
@@ -123,14 +156,14 @@ self.addEventListener("fetch", e => {
             if (guardado) return guardado;
           }
           return new Response(
-            "<meta charset='utf-8'><p style=\"font:16px system-ui;padding:24px\">" +
-            (ehFormulario
-              ? "Sem conexão e a página ainda não foi guardada neste aparelho. " +
-                "Abra o site uma vez com internet."
-              : ehManual
+            "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>" +
+            "<p style=\"font:16px system-ui;padding:24px\">" +
+            (ehManual
               ? "Sem conexão. Este manual não foi marcado como “Disponibilizar " +
                 "offline” neste aparelho. Abra com internet e ligue a opção."
-              : "Esta página precisa de internet para ler os registros.") +
+              : "Sem conexão e esta página ainda não foi guardada neste aparelho. " +
+                "Abra o app uma vez com internet.") +
+            "</p><p style=\"font:16px system-ui;padding:0 24px\"><a href='/'>Voltar ao registro</a></p>" +
             "</p>",
             { headers: { "Content-Type": "text/html; charset=utf-8" } }
           );

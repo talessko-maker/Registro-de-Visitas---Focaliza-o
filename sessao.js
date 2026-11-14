@@ -36,8 +36,17 @@ function daSessao(resposta, email) {
   };
 }
 
+/* Sem sinal o fetch falha com uma mensagem técnica ("Failed to fetch",
+   "Load failed"). Troca por uma que a pessoa entende; a página continua
+   aberta e a sessão guardada não é apagada. */
+const SEM_SINAL = "Sem internet agora. Os dados aparecem quando o sinal voltar.";
+async function busca(url, opcoes) {
+  try { return await fetch(url, opcoes); }
+  catch (e) { throw new Error(SEM_SINAL); }
+}
+
 async function entra(email, senha) {
-  const r = await fetch(`${SUPABASE.url}/auth/v1/token?grant_type=password`, {
+  const r = await busca(`${SUPABASE.url}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: SUPABASE.chave, "Content-Type": "application/json" },
     body: JSON.stringify({ email, password: senha })
@@ -54,7 +63,7 @@ async function entra(email, senha) {
 
 async function renova() {
   if (!sessao || !sessao.refresh_token) return false;
-  const r = await fetch(`${SUPABASE.url}/auth/v1/token?grant_type=refresh_token`, {
+  const r = await busca(`${SUPABASE.url}/auth/v1/token?grant_type=refresh_token`, {
     method: "POST",
     headers: { apikey: SUPABASE.chave, "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: sessao.refresh_token })
@@ -77,7 +86,7 @@ async function pede(caminho, corpo, metodo = "POST") {
     apikey: SUPABASE.chave,
     Authorization: "Bearer " + sessao.access_token
   };
-  const r = await fetch(`${SUPABASE.url}${caminho}`, corpo === undefined
+  const r = await busca(`${SUPABASE.url}${caminho}`, corpo === undefined
     ? { headers: cab }
     : { method: metodo,
         headers: { ...cab, "Content-Type": "application/json",

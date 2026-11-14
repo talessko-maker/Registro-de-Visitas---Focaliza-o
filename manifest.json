@@ -1,6 +1,7 @@
 {
   "name": "Registro de visita - Focalização",
   "short_name": "Focalização",
+  "id": "/",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/",
