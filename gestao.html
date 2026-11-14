@@ -226,6 +226,8 @@ table.quadro tr.clicavel:hover td{background:var(--marcado)}
 .rel-corpo .txt{background:var(--fundo);border-radius:8px;padding:8px 10px;color:var(--tinta);white-space:pre-wrap;max-height:180px;overflow:auto}
 .mais{margin-top:12px;background:#fff;color:var(--principal);border:1px solid var(--linha)}
 table.regua td,table.regua th{vertical-align:top}
+.local-dl{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13.5px}
+.local-dl dt{font-weight:600}.local-dl dd{margin:0}
 @media (max-width:640px){
   .rel>summary{grid-template-columns:72px minmax(0,1fr) 70px 16px}
   .rel>summary .quem,.rel>summary .orig{display:none}
@@ -468,6 +470,7 @@ table.regua td,table.regua th{vertical-align:top}
 
 <script src="/carteira.js"></script>
 <script src="/sessao.js"></script>
+<script src="/local.js"></script>
 <script src="/avaliador.js"></script>
 
 <script>
@@ -844,6 +847,21 @@ const classeDe = n => AVALIADOR.CLASSES.find(c => n >= c.min);
 const selo = c => `<span class="classe ${c}">${c}</span>`;
 const ORIGEM = { "focalizacao": "Focalização", "terra-forte": "Terra Forte" };
 
+/* % de relatórios com o local da visita registrado, só entre os feitos
+   depois que o formulário passou a pedir (LOCAL_DESDE, em local.js).
+   Não entra na nota: é acompanhamento. */
+function pctLocal(vs) {
+  const esperados = vs.filter(localEsperado);
+  return esperados.length ? { pct: pct(esperados.filter(temLocal).length, esperados.length),
+                              com: esperados.filter(temLocal).length, de: esperados.length } : null;
+}
+function tileLocal(vs) {
+  const p = pctLocal(vs);
+  return `<div class="tile"><p class="rotulo">Com local registrado</p>
+    <p class="valor">${p ? p.pct + "%" : "—"}</p>
+    <p class="sub">${p ? `${p.com} de ${p.de} relatórios desde ${br(LOCAL_DESDE)}` : "ainda sem relatórios com a captura"}</p></div>`;
+}
+
 function desenhaQualidade(vs) {
   const lista = vs.map(v => ({ v, r: notas.get(v.id) })).filter(x => x.r);
   const todos = AVALIADOR.resumo(lista.map(x => x.r));
@@ -865,7 +883,8 @@ function desenhaQualidade(vs) {
     tile("Relatórios A ou B", todos.pct_A_B + "%", "excelentes ou bons") +
     tile("Relatórios D", todos.pct_D + "%", "não sustentam decisão técnica", todos.pct_D >= 30 ? "atencao" : "") +
     (AVALIADOR.USAR_PONTUALIDADE ? tile("Registrados no prazo", todos.pct_no_prazo + "%", "até o dia seguinte à visita") : "") +
-    tile("Para auditar", num(todos.com_alerta), "relatórios com alerta", todos.com_alerta ? "atencao" : "");
+    tile("Para auditar", num(todos.com_alerta), "relatórios com alerta", todos.com_alerta ? "atencao" : "") +
+    tileLocal(lista.map(x => x.v));
 
   /* --- régua: distribuição das classes --- */
   const total = lista.length;
@@ -895,13 +914,14 @@ function desenhaQualidade(vs) {
 
   /* --- nota por pessoa --- */
   const porPessoa = {};
-  for (const x of lista) (porPessoa[autor(x.v)] ||= []).push(x.r);
-  const linhas = Object.entries(porPessoa).map(([n, rs]) => ({ n, ...AVALIADOR.resumo(rs) }))
+  const visDe = {};
+  for (const x of lista) { (porPessoa[autor(x.v)] ||= []).push(x.r); (visDe[autor(x.v)] ||= []).push(x.v); }
+  const linhas = Object.entries(porPessoa).map(([n, rs]) => ({ n, ...AVALIADOR.resumo(rs), local: pctLocal(visDe[n]) }))
     .sort((a, b) => b.nota_media - a.nota_media || b.relatorios - a.relatorios || a.n.localeCompare(b.n, "pt-BR"));
   $("q-pessoas").innerHTML = `
     <table class="quadro">
       <thead><tr><th>Pessoa</th><th>Relatórios</th><th>Nota média</th><th>Classes (A · B · C · D)</th>
-        ${AVALIADOR.USAR_PONTUALIDADE ? "<th>No prazo</th>" : ""}<th>Para auditar</th></tr></thead>
+        ${AVALIADOR.USAR_PONTUALIDADE ? "<th>No prazo</th>" : ""}<th>Para auditar</th><th>Com local</th></tr></thead>
       <tbody>${linhas.map(l => {
         const c = classeDe(l.nota_media).classe;
         return `<tr class="clicavel" data-pessoa="${escapa(l.n)}" tabindex="0">
@@ -917,6 +937,7 @@ function desenhaQualidade(vs) {
             <span class="n">${CLS.map(k => l.classes[k]).join(" · ")}</span></div></td>
           ${AVALIADOR.USAR_PONTUALIDADE ? `<td class="n">${l.pct_no_prazo}%</td>` : ""}
           <td class="n">${l.com_alerta ? `<span class="dias-alerta">${l.com_alerta}</span>` : 0}</td>
+          <td class="n" title="${l.local ? `${l.local.com} de ${l.local.de} relatórios desde ${br(LOCAL_DESDE)}` : ""}">${l.local ? l.local.pct + "%" : "—"}</td>
         </tr>`; }).join("")}</tbody>
     </table>`;
 
@@ -959,6 +980,7 @@ function desenhaListaRelatorios(lista) {
                               : `<h4>Nada faltou.</h4>`}
         <h4>Feito por · Carteira · Formulário</h4><p style="margin:0">${escapa(autor(v))} · ${escapa(v.consultor)} · ${ORIGEM[v.origem] || escapa(v.origem)}${
           (v.extras || {}).talhao ? ` · Talhão ${escapa(v.extras.talhao)}` : ""}</p>
+        ${(v.extras || {}).local ? `<dl class="local-dl">${localHtml(v.extras.local)}</dl>` : ""}
         <h4>Descrição</h4><div class="txt">${escapa(v.descricao || "—")}</div>
         ${(v.acao || "").trim() ? `<h4>Ação combinada${v.prazo_acao ? ` · prazo ${br(v.prazo_acao)}` : ""}</h4><div class="txt">${escapa(v.acao)}</div>` : ""}
       </div>

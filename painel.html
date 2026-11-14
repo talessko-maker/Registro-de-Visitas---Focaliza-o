@@ -342,6 +342,7 @@ button.leve{background:#fff;color:var(--principal);border:1px solid var(--linha)
 <script src="/vendor-jspdf.js"></script>
 <script src="/relatorio.js"></script>
 <script src="/sessao.js"></script>
+<script src="/local.js"></script>
 
 <script>
 /* ===================================================================
@@ -576,6 +577,7 @@ function cartao(v) {
       ${areas}
       <dt>Enviado em</dt>
       <dd>${new Date(v.registrado_em).toLocaleString("pt-BR")}</dd>
+      ${localHtml(extras.local)}
       ${v.editado_em ? `<dt>Corrigido em</dt>
       <dd>${new Date(v.editado_em).toLocaleString("pt-BR")}</dd>` : ""}
     </dl>
@@ -911,6 +913,10 @@ function csv() {
     ["municipio",    v => v.municipio],
     ["talhao",       v => ((v.extras || {}).talhao) || ""],
     ["relator",      v => ((v.extras || {}).relator) || ""],
+    ["local_lat",    v => (((v.extras || {}).local) || {}).lat ?? ""],
+    ["local_lng",    v => (((v.extras || {}).local) || {}).lng ?? ""],
+    ["local_precisao_m", v => (((v.extras || {}).local) || {}).precisao_m ?? ""],
+    ["local_sem_motivo", v => (((v.extras || {}).local) || {}).erro || ""],
     ["formulario",   v => ORIGENS[v.origem] || v.origem],
     ["area_manejo_ha",       v => (v.extras || {}).area_manejo_ha],
     ["area_experimental_ha", v => (v.extras || {}).area_experimental_ha],

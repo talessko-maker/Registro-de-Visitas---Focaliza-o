@@ -743,6 +743,44 @@ function mostraErro(msg) {
   erro.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
+/* --- localização do momento do registro ---
+   O celular informa onde está quando a pessoa começa a preencher e de
+   novo ao salvar; vai junto do registro em extras.local. Não acompanha
+   ninguém: são só esses dois pedidos, por registro. Sem permissão ou sem
+   GPS, o registro sai normalmente, marcado com o motivo. Funciona sem
+   internet (o GPS não depende de sinal de dados). */
+function pegaLocal(espera = 12000) {
+  return new Promise(ok => {
+    if (!("geolocation" in navigator)) return ok({ erro: "indisponivel" });
+    navigator.geolocation.getCurrentPosition(
+      p => ok({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6),
+                precisao_m: Math.round(p.coords.accuracy),
+                em: new Date(p.timestamp || Date.now()).toISOString() }),
+      e => ok({ erro: e.code === 1 ? "negado" : e.code === 3 ? "tempo" : "indisponivel" }),
+      { enableHighAccuracy: true, timeout: espera, maximumAge: 120000 });
+  });
+}
+let localInicio = null;      /* posição de quando o preenchimento começou */
+function pedeLocalInicio() {
+  if (localInicio) return;
+  localInicio = { erro: "aguardando" };
+  pegaLocal().then(l => { localInicio = l; });
+}
+form.addEventListener("focusin", pedeLocalInicio);
+form.addEventListener("pointerdown", pedeLocalInicio);
+/* Na hora de salvar: tenta a posição atual por até 6 s; se não vier,
+   fica a do começo do preenchimento (com o motivo, se nenhuma veio). */
+async function localDoRegistro() {
+  const agora = await Promise.race([
+    pegaLocal(6000),
+    new Promise(ok => setTimeout(() => ok({ erro: "tempo" }), 6500))
+  ]);
+  if (agora.lat != null) return agora;
+  if (localInicio && localInicio.lat != null) return localInicio;
+  return agora.erro === "negado" || (localInicio && localInicio.erro === "negado")
+    ? { erro: "negado" } : agora;
+}
+
 form.addEventListener("submit", async e => {
   e.preventDefault();
   erro.hidden = true;
@@ -774,6 +812,9 @@ form.addEventListener("submit", async e => {
   };
 
   btnEnviar.disabled = true;
+  btnEnviar.textContent = "Registrando o local…";
+  registro.local = await localDoRegistro();
+  localInicio = null;          /* o próximo registro pede de novo */
   btnEnviar.textContent = "Salvando…";
 
   /* 1. o PDF sai sempre, com ou sem sinal */
@@ -823,6 +864,12 @@ form.addEventListener("submit", async e => {
     rascunhoAberto = null;
     desenhaRascunhos();
   }
+  const l = registro.local || {};
+  texto += l.lat != null
+    ? ` Local da visita registrado (precisão de ${l.precisao_m} m).`
+    : l.erro === "negado"
+      ? " O local da visita não foi registrado: a localização está bloqueada para este app no celular."
+      : " O local da visita não foi registrado: o GPS não respondeu a tempo.";
   $("pronto-texto").textContent = texto;
   $("pronto-resumo").innerHTML = `
     <dt>Produtor</dt><dd>${registro.produtor}</dd>
@@ -972,7 +1019,11 @@ async function enviaRegistro(reg) {
         area_manejo_ha: reg.area_manejo_ha,
         area_experimental_ha: reg.area_experimental_ha } : {}),
       talhao: reg.talhao || null,
-      relator: reg.relator || null
+      relator: reg.relator || null,
+      /* onde o celular estava ao salvar: {lat, lng, precisao_m, em} ou
+         {erro: "negado" | "tempo" | "indisponivel"}. Registros antigos da
+         fila não têm, e ficam sem. */
+      local: reg.local || null
     },
     registrado_em: reg.enviado_em
   };
